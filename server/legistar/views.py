@@ -352,8 +352,9 @@ def calendar(request, style: str):
     if style not in SUMMARIZATION_STYLES:
         raise Http404(f"Unknown style: {style}")
 
-    # Get all active meetings (no past cutoff — include all crawled data)
-    meetings = Meeting.manager.active().order_by("-date")
+    # Only show meetings within the past crawl window (previous week)
+    cutoff_date = datetime.date.today() - datetime.timedelta(days=settings.CRAWL_INTERVAL_DAYS)
+    meetings = Meeting.manager.active().filter(date__gte=cutoff_date).order_by("-date")
 
     # Build a flat list of bill entries: one per (legislation, meeting) pair
     bill_entries = []
