@@ -53,7 +53,8 @@ jobs:
       - name: Crawl Legistar calendar
         shell: micromamba-shell {0}
         run: |
-          python manage.py legistar crawl-calendar --customer seattle
+          python manage.py legistar crawl-calendar --customer seattle \
+            --start $(date -d '7 days ago' +'%Y-%m-%d')
 
       - name: Run summarization pipeline
         shell: micromamba-shell {0}
@@ -61,7 +62,13 @@ jobs:
 
       - name: Build static site
         shell: micromamba-shell {0}
-        run: python manage.py distill-local --force
+        run: python manage.py distill-local --force --collectstatic
+        env:
+          BASE_URL: https://katiejohnsonsf.github.io/informed_seattle
+          DEBUG: NO
+          SECURE_SSL_REDIRECT: NO
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          EMAIL_BACKEND: django.core.mail.backends.console.EmailBackend
 
       - name: Commit updated database to main
         run: |
