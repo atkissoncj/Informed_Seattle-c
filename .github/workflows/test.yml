@@ -7,13 +7,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the `engage` repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install node 18
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v4
         with:
           node-version: "18"
       - name: Install python 3.11.x
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         id: install-python
         with:
           python-version: "3.11.3"
@@ -25,7 +25,7 @@ jobs:
           virtualenvs-in-project: true
       - name: Load cached venv
         id: cache-python
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: .venv
           key: venv-${{ runner.os }}-${{ steps.install-python.outputs.python-version }}-${{ hashfiles('**/poetry.lock') }}
@@ -33,7 +33,7 @@ jobs:
         if: steps.cache-python.outputs.cache-hit != 'true'
         run: poetry install --no-interaction --no-root
       - name: Cache npm cachefiles
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
