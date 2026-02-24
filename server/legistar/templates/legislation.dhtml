@@ -41,7 +41,7 @@
   <nav class="breadcrumbs">
     <ul>
       <li>
-        <a href="{% url "legistar:calendar" style=style %}">Calendar</a>
+        <a href="{% url "legistar:calendar" style=style %}">All Bills</a>
       </li>
       <li>
         <a href="{% url "legistar:meeting" meeting_id=meeting_id style=style %}">Meeting {{ meeting_id }}</a>
