@@ -46,7 +46,7 @@ class OLMoClient:
         if self.device == "cuda":
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
-                torch_dtype=torch.float16,
+                dtype=torch.float16,
                 device_map="auto",
                 local_files_only=True,
             )
@@ -55,7 +55,7 @@ class OLMoClient:
             # The 1B model at ~6GB float32 fits comfortably in 16GB RAM.
             self.model = AutoModelForCausalLM.from_pretrained(
                 self.model_name,
-                torch_dtype=torch.float32,
+                dtype=torch.float32,
                 local_files_only=True,
             )
             self.device = "cpu"
