@@ -1,9 +1,7 @@
 import typing as t
 
 from server.documents.summarize import (
-    CONCISE_SUMMARY_TEMPLATE,
     SummarizationResult,
-    summarize_openai,
 )
 from server.lib.style import SummarizationStyle
 
@@ -64,7 +62,7 @@ Provide a concise summary of the meeting's key items and legislative actions."""
         olmo = get_olmo_client()
         body = olmo.generate(prompt, max_new_tokens=512, temperature=0.3)
 
-        headline_prompt = f"Create a brief headline for this {department_name} meeting (under 15 words)"
+        headline_prompt = f"Create a brief headline for this {department_name} meeting (under 15 words)"  # noqa: E501
         headline = olmo.generate(headline_prompt, max_new_tokens=30, temperature=0.3)
 
         return SummarizationSuccess(

@@ -137,7 +137,8 @@ def analyze_legislation_history(
 def _summarize_original_proposal(olmo, title: str, full_text: str) -> str:
     """Summarize what was originally proposed (LLM call)."""
     text_excerpt = full_text[:1500] if full_text else title
-    prompt = f"""Summarize in 2-3 sentences what this Seattle City Council bill originally proposed:
+    prompt = f"""Summarize in 2-3 sentences what this \
+Seattle City Council bill originally proposed:
 
 Title: {title}
 
@@ -214,7 +215,8 @@ def _summarize_final_text(
     if full_text:
         context += f"\n\nBill text (excerpt):\n{full_text[:1200]}"
 
-    prompt = f"""Summarize in 3-4 sentences what this Seattle City Council bill does in its current form:
+    prompt = f"""Summarize in 3-4 sentences what this \
+Seattle City Council bill does in its current form:
 
 {context}
 
@@ -223,15 +225,20 @@ What the legislation does:"""
 
 
 def _summarize_differences(olmo, title: str, analysis: LegislationAnalysis) -> str:
-    """Summarize differences between original and final (LLM call only if amendments exist)."""
+    """Summarize differences between original and final
+    (LLM call only if amendments exist)."""
     if not analysis.amendments:
-        return "No amendments have been made. The current text is the same as originally proposed."
+        return (
+            "No amendments have been made. The current text is the same"
+            " as originally proposed."
+        )
 
     amendments_text = "\n".join(
         f"- {a['action']} by {a['action_by']} ({a['date']})"
         for a in analysis.amendments
     )
-    prompt = f"""This Seattle City Council bill was amended. Summarize in 2-3 sentences how the final version differs from the original:
+    prompt = f"""This Seattle City Council bill was amended. Summarize \
+in 2-3 sentences how the final version differs from the original:
 
 Title: {title}
 Original proposal excerpt: {analysis.original_proposal[:800]}
@@ -306,7 +313,12 @@ def summarize_council_bill_structured(
         )
         headline = olmo.generate(headline_prompt, max_new_tokens=30, temperature=0.3)
 
-        context_text = f"Title: {title}\nFull text available: {'yes' if analysis.final_text else 'no'}\nAmendments: {len(analysis.amendments)}\nVotes: {len(analysis.votes_summary)}"
+        context_text = (
+            f"Title: {title}\n"
+            f"Full text available: {'yes' if analysis.final_text else 'no'}\n"
+            f"Amendments: {len(analysis.amendments)}\n"
+            f"Votes: {len(analysis.votes_summary)}"
+        )
 
         return SummarizationSuccess(
             original_text=context_text,

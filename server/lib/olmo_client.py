@@ -127,7 +127,8 @@ class OLMoClient:
         """
         # Create summarization prompt
         if style == "concise":
-            prompt = f"""Please provide a concise summary of the following legislative text. 
+            prompt = f"""Please provide a concise summary of the \
+following legislative text.
 First, create a brief headline (under 10 words), then provide a 2-3 sentence summary.
 
 Text to summarize:

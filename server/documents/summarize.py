@@ -1,8 +1,6 @@
 import typing as t
 from dataclasses import dataclass
 
-from django.conf import settings
-from django.template import Context, Template
 
 # Lazy imports to avoid loading model during migrations
 # from server.lib.summary_cache import get_document_summary_cache
@@ -152,7 +150,9 @@ from django.template import Context, Template
 #     # Build LangChain-style PromptTemplates.
 #     map_prompt = _make_langchain_prompt(map_template, context)
 #     body_combine_prompt = _make_langchain_prompt(body_combine_template, context)
-#     headline_combine_prompt = _make_langchain_prompt(headline_combine_template, context)
+#     headline_combine_prompt = _make_langchain_prompt(
+#         headline_combine_template, context
+#     )
 
 #     # Build a LangChain summarization chain. This one will produce the body
 #     # summary.
@@ -196,7 +196,8 @@ from django.template import Context, Template
 #     chain.combine_document_chain = combine_document_chain
 #     # Massage the chunk summaries into the shape expected by _process_results().
 #     hack_results = [
-#         {chain.llm_chain.output_key: chunk_summary} for chunk_summary in chunk_summaries
+#         {chain.llm_chain.output_key: chunk_summary}
+#         for chunk_summary in chunk_summaries
 #     ]
 #     # Call the private method on MapReduceDocumentsChain that we want to use.
 #     headline, _ = chain._process_results(results=hack_results, docs=documents)

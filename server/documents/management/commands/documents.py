@@ -1,4 +1,4 @@
-import sys
+from server.documents.models import DocumentSummary
 from server.lib.olmo_client import get_olmo_client
 
 # import djclick as click
@@ -119,7 +119,7 @@ def handle_summarize(self, options):
 
         # Extract text if not already done
         if not doc.extracted_text:
-            extract_text_from_document(doc)
+            doc.extract_text()
 
         # Generate summary
         summary_result = olmo.summarize(

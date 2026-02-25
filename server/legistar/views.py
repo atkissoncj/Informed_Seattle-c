@@ -57,7 +57,7 @@ def _structured_summary_to_html(text: str):
             desc = _STRUCTURED_SECTION_HEADERS[line]
             html_parts.append(
                 format_html(
-                    '<h2 style="font-weight:700">{} <small style="font-weight:normal;color:#666">({})</small></h2>',
+                    '<h2 style="font-weight:700">{} <small style="font-weight:normal;color:#666">({})</small></h2>',  # noqa: E501
                     line.title(),
                     desc,
                 )
