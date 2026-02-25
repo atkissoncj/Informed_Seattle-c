@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # type: ignore[import]
 
 # Load environment variables from .env file
 load_dotenv()

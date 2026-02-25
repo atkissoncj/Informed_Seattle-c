@@ -331,12 +331,12 @@ def clean_header(header: str) -> str:
 def get_href_from_a_tag(a: Tag) -> str:
     """Given an `a` tag, get the linked URL."""
     # If there's an href, and it's not empty, use that.
-    maybe_href = a.attrs.get("href", "").replace("#", "").strip()
+    maybe_href = str(a.attrs.get("href", "")).replace("#", "").strip()
     if maybe_href:
         return maybe_href
 
     # There'd better be an onclick handler.
-    maybe_onclick = a.attrs.get("onclick", "").strip()
+    maybe_onclick = str(a.attrs.get("onclick", "")).strip()
     if not maybe_onclick:
         raise LegistarError(f"Could not find href or onclick for link: {a}")
 
@@ -847,7 +847,7 @@ class DetailScraper:
         full_text_tags = [
             tag
             for tag in self.soup.find_all("div")
-            if tag.attrs.get("id", "").endswith("_divText")
+            if str(tag.attrs.get("id", "")).endswith("_divText")
         ]
         if len(full_text_tags) != 1:
             return None

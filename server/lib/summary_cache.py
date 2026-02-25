@@ -302,7 +302,7 @@ def get_document_summary_cache():
 
 def get_bill_summary_cache():
     """Get cache instance for bill summaries."""
-    from server.legistar.models import BillSummary  # You'll create this
+    from server.legistar.models import BillSummary  # type: ignore[attr-defined]
 
     return SummaryCache(BillSummary)
 
