@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from django.conf import settings
 from django.template import Context, Template
+
 # Lazy imports to avoid loading model during migrations
 # from server.lib.summary_cache import get_document_summary_cache
 # from server.lib.olmo_client import get_olmo_client
@@ -16,7 +17,7 @@ from django.template import Context, Template
 # from langchain.prompts import PromptTemplate
 # from langchain.text_splitter import CharacterTextSplitter
 
-#from server.lib.style import SummarizationStyle
+# from server.lib.style import SummarizationStyle
 
 # ---------------------------------------------------------------------
 # Base utilities
@@ -275,7 +276,8 @@ CONCISE_COMPACT_HEADLINE:"""  # noqa: E501
 # Summarizers
 # ---------------------------------------------------------------------
 
-def summarize_bill(bill, style='concise', force=False):
+
+def summarize_bill(bill, style="concise", force=False):
     """
     Summarize a bill with caching.
 
@@ -292,26 +294,26 @@ def summarize_bill(bill, style='concise', force=False):
 
     cache = get_bill_summary_cache()
     olmo = get_olmo_client()
-    
+
     # Combine bill text from various sources
     bill_text = f"{bill.title}\n\n{bill.description or ''}"
     if bill.full_text:
         bill_text += f"\n\n{bill.full_text}"
-    
+
     # Define generator function
     def generate_summary(text, style):
         return olmo.summarize(text, style=style, max_tokens=512)
-    
+
     # Get or generate with caching
     summary = cache.get_or_generate(
         text=bill_text,
-        style=f'olmo-{style}',
+        style=f"olmo-{style}",
         model_name=olmo.model_name,
         generator_func=generate_summary,
         parent_object=bill,
         force_regenerate=force,
     )
-    
+
     return summary
 
 
@@ -370,14 +372,14 @@ def olmo_document_summarization(
 
     try:
         olmo = get_olmo_client()
-        result = olmo.summarize(text, style='concise', max_tokens=512)
+        result = olmo.summarize(text, style="concise", max_tokens=512)
 
         return SummarizationSuccess(
             original_text=text,
-            body=result.get('body', ''),
-            headline=result.get('headline', result.get('body', '')[:100]),
+            body=result.get("body", ""),
+            headline=result.get("headline", result.get("body", "")[:100]),
             chunks=(text,),
-            chunk_summaries=(result.get('body', ''),),
+            chunk_summaries=(result.get("body", ""),),
         )
     except Exception as e:
         return SummarizationError(original_text=text, message=str(e))
@@ -408,8 +410,7 @@ class SummarizerCallable(t.Protocol):
 
     def __call__(
         self, text: str, context: dict[str, t.Any] | None = None
-    ) -> SummarizationResult:
-        ...
+    ) -> SummarizationResult: ...
 
 
 SUMMARIZERS: list[SummarizerCallable] = [

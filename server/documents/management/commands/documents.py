@@ -1,5 +1,3 @@
-
-
 import sys
 from server.lib.olmo_client import get_olmo_client
 
@@ -109,33 +107,34 @@ from server.lib.olmo_client import get_olmo_client
 #             if settings.VERBOSE:
 #                 print("\n\n", file=sys.stderr)
 
+
 def handle_summarize(self, options):
     """Summarize documents using OLMo 3."""
-    
+
     olmo = get_olmo_client()
     documents = self.get_documents_to_summarize(options)
-    
+
     for doc in documents:
         self.stdout.write(f"Summarizing: {doc.filename}")
-        
+
         # Extract text if not already done
         if not doc.extracted_text:
             extract_text_from_document(doc)
-        
+
         # Generate summary
         summary_result = olmo.summarize(
             doc.extracted_text,
-            style='concise',
+            style="concise",
             max_tokens=512,
         )
-        
+
         # Save summary
         DocumentSummary.objects.update_or_create(
             document=doc,
-            style='olmo-concise',
+            style="olmo-concise",
             defaults={
-                'headline': summary_result['headline'],
-                'body': summary_result['body'],
-                'model': 'allenai/OLMo-2-1124-13B-Instruct',
-            }
+                "headline": summary_result["headline"],
+                "body": summary_result["body"],
+                "model": "allenai/OLMo-2-1124-13B-Instruct",
+            },
         )

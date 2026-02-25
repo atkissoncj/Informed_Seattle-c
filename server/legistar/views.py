@@ -10,7 +10,13 @@ from server.documents.models import Document, DocumentSummary
 from server.lib.style import SUMMARIZATION_STYLES, SummarizationStyle
 from server.lib.truncate import truncate_str
 
-from .models import CrawlMetadata, Legislation, LegislationSummary, Meeting, MeetingSummary
+from .models import (
+    CrawlMetadata,
+    Legislation,
+    LegislationSummary,
+    Meeting,
+    MeetingSummary,
+)
 
 _SUMMARY_PENDING = "Summary pending\u2026"
 
@@ -49,10 +55,13 @@ def _structured_summary_to_html(text: str):
             continue
         if line in _STRUCTURED_SECTION_HEADERS:
             desc = _STRUCTURED_SECTION_HEADERS[line]
-            html_parts.append(format_html(
-                '<h2 style="font-weight:700">{} <small style="font-weight:normal;color:#666">({})</small></h2>',
-                line.title(), desc,
-            ))
+            html_parts.append(
+                format_html(
+                    '<h2 style="font-weight:700">{} <small style="font-weight:normal;color:#666">({})</small></h2>',
+                    line.title(),
+                    desc,
+                )
+            )
         else:
             html_parts.append(format_html("<p>{}</p>", line))
     return "\n".join(html_parts)
@@ -88,9 +97,7 @@ def _legislation_table_context(
         legislation=legislation, style=style
     ).first()
     clean_headline = (
-        _remove_surrounding_quotes(summary.headline)
-        if summary
-        else _SUMMARY_PENDING
+        _remove_surrounding_quotes(summary.headline) if summary else _SUMMARY_PENDING
     )
     return {
         "legistar_id": legislation.legistar_id,
@@ -200,9 +207,7 @@ def _legislation_context(legislation: Legislation, style: SummarizationStyle) ->
         legislation=legislation, style=style
     ).first()
     headline = (
-        _remove_surrounding_quotes(summary.headline)
-        if summary
-        else _SUMMARY_PENDING
+        _remove_surrounding_quotes(summary.headline) if summary else _SUMMARY_PENDING
     )
     body = summary.body if summary else "This summary is being generated."
 
@@ -353,7 +358,9 @@ def calendar(request, style: str):
         raise Http404(f"Unknown style: {style}")
 
     # Only show meetings within the past crawl window (previous week)
-    cutoff_date = datetime.date.today() - datetime.timedelta(days=settings.CRAWL_INTERVAL_DAYS)
+    cutoff_date = datetime.date.today() - datetime.timedelta(
+        days=settings.CRAWL_INTERVAL_DAYS
+    )
     meetings = Meeting.manager.active().filter(date__gte=cutoff_date).order_by("-date")
 
     # Build a flat list of bill entries: one per (legislation, meeting) pair
@@ -372,15 +379,17 @@ def calendar(request, style: str):
             leg_context = _legislation_context(legislation, style)
             kind = leg_context["kind"]
             leg_context["summary"] = leg_context["summary"].replace("*", "")
-            bill_entries.append({
-                "legislation": leg_context,
-                "meeting_date": meeting.date,
-                "day_of_week": meeting.date.strftime("%A"),
-                "committee": meeting.crawl_data.department.name,
-                "meeting_id": meeting.legistar_id,
-                "is_council_bill": "Council Bill" in kind,
-                "is_informational": kind == "Informational",
-            })
+            bill_entries.append(
+                {
+                    "legislation": leg_context,
+                    "meeting_date": meeting.date,
+                    "day_of_week": meeting.date.strftime("%A"),
+                    "committee": meeting.crawl_data.department.name,
+                    "meeting_id": meeting.legistar_id,
+                    "is_council_bill": "Council Bill" in kind,
+                    "is_informational": kind == "Informational",
+                }
+            )
 
     # Sort by meeting date descending (newest first)
     bill_entries.sort(key=lambda e: e["meeting_date"], reverse=True)
@@ -404,6 +413,7 @@ def calendar(request, style: str):
         )
         next_crawl_at = next_crawl_at.replace(hour=crawl_h, minute=crawl_m, second=0)
         from django.utils import timezone
+
         now = timezone.now()
         next_crawl_delta_days = (next_crawl_at - now).days
     else:

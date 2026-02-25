@@ -774,9 +774,11 @@ class DetailScraper:
         date, time = text.split(" ", maxsplit=1)
         return (
             datetime.datetime.strptime(date, "%m/%d/%Y").date(),
-            datetime.datetime.strptime(time, "%I:%M %p").time()
-            if time and time.lower().strip() != "canceled"
-            else None,
+            (
+                datetime.datetime.strptime(time, "%I:%M %p").time()
+                if time and time.lower().strip() != "canceled"
+                else None
+            ),
         )
 
     def get_date(self, label: str) -> datetime.date:

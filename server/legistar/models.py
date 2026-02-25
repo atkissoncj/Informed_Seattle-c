@@ -610,9 +610,7 @@ class CrawlMetadata(models.Model):
     There should only ever be one row in this table (pk=1).
     """
 
-    last_crawl_at = models.DateTimeField(
-        help_text="When the last crawl completed."
-    )
+    last_crawl_at = models.DateTimeField(help_text="When the last crawl completed.")
 
     class Meta:
         verbose_name = "Crawl metadata"

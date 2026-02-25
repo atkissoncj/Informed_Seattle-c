@@ -443,10 +443,12 @@ def crawl_calendar(
             )
 
     def _update_db(
-        item: CalendarCrawlData
-        | MeetingCrawlData
-        | LegislationCrawlData
-        | ActionCrawlData,
+        item: (
+            CalendarCrawlData
+            | MeetingCrawlData
+            | LegislationCrawlData
+            | ActionCrawlData
+        ),
     ) -> None:
         """Update the database."""
         if isinstance(item, MeetingCrawlData):

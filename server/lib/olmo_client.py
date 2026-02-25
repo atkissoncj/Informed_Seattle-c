@@ -1,6 +1,7 @@
 """
 OLMo 3 client for text generation and summarization.
 """
+
 import os
 from typing import Optional
 import torch
@@ -31,8 +32,7 @@ class OLMoClient:
         max_length: int = 2048,
     ):
         self.model_name = model_name or os.getenv(
-            "OLMO_MODEL_NAME",
-            "allenai/OLMo-2-0425-1B-Instruct"
+            "OLMO_MODEL_NAME", "allenai/OLMo-2-0425-1B-Instruct"
         )
         self.device = _select_device(device)
         self.max_length = max_length
@@ -55,7 +55,7 @@ class OLMoClient:
                 dtype=torch.float32,
             )
             self.device = "cpu"
-    
+
     def generate(
         self,
         prompt: str,
@@ -65,13 +65,13 @@ class OLMoClient:
     ) -> str:
         """
         Generate text from a prompt using OLMo 3.
-        
+
         Args:
             prompt: Input prompt
             max_new_tokens: Maximum number of tokens to generate
             temperature: Sampling temperature
             top_p: Nucleus sampling parameter
-            
+
         Returns:
             Generated text
         """
@@ -107,7 +107,7 @@ class OLMoClient:
         ).strip()
 
         return response
-    
+
     def summarize(
         self,
         text: str,
@@ -116,12 +116,12 @@ class OLMoClient:
     ) -> dict:
         """
         Summarize text using OLMo 3.
-        
+
         Args:
             text: Text to summarize
             style: Summarization style (e.g., 'concise', 'detailed')
             max_tokens: Maximum tokens for summary
-            
+
         Returns:
             Dictionary with 'headline' and 'body' keys
         """
@@ -146,14 +146,14 @@ Text to summarize:
 Format your response as:
 HEADLINE: [your headline here]
 SUMMARY: [your detailed summary here]"""
-        
+
         # Generate summary
         response = self.generate(prompt, max_new_tokens=max_tokens)
-        
+
         # Parse response
         headline = ""
         body = ""
-        
+
         if "HEADLINE:" in response and "SUMMARY:" in response:
             parts = response.split("SUMMARY:")
             headline = parts[0].replace("HEADLINE:", "").strip()
@@ -165,7 +165,7 @@ SUMMARY: [your detailed summary here]"""
             sentences = body.split(".")
             if sentences:
                 headline = sentences[0].strip()
-        
+
         return {
             "headline": headline,
             "body": body,

@@ -9,6 +9,7 @@ Council Bills get a 4-section structured summary:
 
 Other legislation types (Appointments, Information Items) get a simple summary.
 """
+
 import typing as t
 from dataclasses import dataclass
 

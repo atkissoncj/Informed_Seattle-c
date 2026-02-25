@@ -49,6 +49,7 @@ class SummaryBaseModel(models.Model):
         abstract = True
         ordering = ["-created_at"]
 
+
 class SummaryStyle:
     """Configuration for OLMo-based summarization."""
 
@@ -61,6 +62,7 @@ class SummaryStyle:
         """Lazy-load the OLMo client."""
         if self._client is None:
             from server.lib.olmo_client import get_olmo_client
+
             self._client = get_olmo_client()
         return self._client
 
@@ -69,18 +71,20 @@ class SummaryStyle:
         return self.client.summarize(
             text=text,
             style=self.name,
-            max_tokens=kwargs.get('max_tokens', 256),
+            max_tokens=kwargs.get("max_tokens", 256),
         )
+
 
 # Style definitions - instances created lazily
 _STYLES = None
+
 
 def get_styles():
     """Get or create the STYLES dictionary lazily."""
     global _STYLES
     if _STYLES is None:
         _STYLES = {
-            'concise': SummaryStyle('concise'),
-            'detailed': SummaryStyle('detailed'),
+            "concise": SummaryStyle("concise"),
+            "detailed": SummaryStyle("detailed"),
         }
     return _STYLES

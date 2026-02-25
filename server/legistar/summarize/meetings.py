@@ -64,9 +64,7 @@ Provide a concise summary of the meeting's key items and legislative actions."""
         olmo = get_olmo_client()
         body = olmo.generate(prompt, max_new_tokens=512, temperature=0.3)
 
-        headline_prompt = (
-            f"Create a brief headline for this {department_name} meeting (under 15 words)"
-        )
+        headline_prompt = f"Create a brief headline for this {department_name} meeting (under 15 words)"
         headline = olmo.generate(headline_prompt, max_new_tokens=30, temperature=0.3)
 
         return SummarizationSuccess(
@@ -97,8 +95,7 @@ class MeetingSummarizerCallable(t.Protocol):
         department_name: str,
         document_summary_texts: list[str],
         legislation_summary_texts: list[str],
-    ) -> SummarizationResult:
-        ...
+    ) -> SummarizationResult: ...
 
 
 MEETING_SUMMARIZERS: list[MeetingSummarizerCallable] = [
