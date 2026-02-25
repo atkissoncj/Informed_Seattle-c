@@ -76,9 +76,9 @@ def analyze_legislation_history(
     for version in sorted(version_actions.keys()):
         actions = version_actions[version]
         for action_data in actions:
-            action = action_data.get("action", "")
-            result = action_data.get("result", "")
-            action_by = action_data.get("action_by", "")
+            action = action_data.get("action") or ""
+            result = action_data.get("result") or ""
+            action_by = action_data.get("action_by") or ""
             date = action_data.get("date", "")
 
             # Identify amendment-related actions
