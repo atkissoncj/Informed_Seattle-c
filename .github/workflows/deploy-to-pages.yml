@@ -56,7 +56,13 @@ jobs:
       - name: Install node dependencies
         run: npm install
       - name: Build static site
-        run: poetry run python manage.py distill-local --force --collectstatic
+        run: |
+          # Generate HTML pages with absolute /Informed_Seattle/static/ references
+          poetry run python manage.py distill-local --force
+          # Collect static files, then copy them where GitHub Pages expects them
+          poetry run python manage.py collectstatic --noinput --verbosity 0
+          mkdir -p dist/static
+          cp -r /tmp/engage-static/. dist/static/
         env:
           BASE_URL: https://katiejohnsonsf.github.io/Informed_Seattle
           STATIC_URL: /Informed_Seattle/static/
