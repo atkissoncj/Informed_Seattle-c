@@ -566,3 +566,102 @@ h4.action-type {
 .hidden {
   display: none;
 }
+
+/* ---- Council bill status badge ---- */
+
+.bill-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  margin-left: 0.6em;
+  padding: 0.15em 0.55em;
+  border-radius: 4px;
+  background-color: #EEF2FF;
+  color: #4338CA;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Color variants by status text */
+.bill-status:has(.bill-status-info[data-status="passed"]) {
+  background-color: #DCFCE7;
+  color: #166534;
+}
+.bill-status:has(.bill-status-info[data-status="signed"]) {
+  background-color: #CCFBF1;
+  color: #115E59;
+}
+.bill-status:has(.bill-status-info[data-status="vetoed"]),
+.bill-status:has(.bill-status-info[data-status="failed"]) {
+  background-color: #FEE2E2;
+  color: #991B1B;
+}
+
+/* The ⓘ icon */
+.bill-status-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.1em;
+  border-radius: 50%;
+  background-color: currentColor;
+  font-style: normal;
+  cursor: help;
+  flex-shrink: 0;
+}
+
+.bill-status-info::before {
+  content: 'i';
+  color: #fff;
+  font-size: 0.7em;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Pure-CSS tooltip */
+.bill-status-tooltip {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #1E1B4B;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.45;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  width: max-content;
+  max-width: 240px;
+  white-space: normal;
+  text-align: left;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 100;
+}
+
+/* Small arrow pointing down from tooltip */
+.bill-status-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1E1B4B;
+}
+
+.bill-status-info:hover .bill-status-tooltip {
+  visibility: visible;
+  opacity: 1;
+}

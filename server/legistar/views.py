@@ -19,6 +19,47 @@ from .models import (
 )
 
 _SUMMARY_PENDING = "Summary pending\u2026"
+_COUNCIL_BILL_KIND = "Council Bill"
+
+_FULL_COUNCIL_BODIES = frozenset(
+    {"full council", "seattle city council", "city council"}
+)
+
+_STATUS_TOOLTIPS = {
+    "signed": "Signed by Mayor, awaiting or completed codification",
+    "vetoed": "Returned by Mayor without signature",
+    "passed": "Approved by Full Council, in executive phase",
+    "failed": "Did not pass Full Council",
+    "in_committee": "Referred and awaiting or undergoing committee review",
+    "referred": "Referred from Council to Committee",
+}
+
+
+def _council_bill_status(legislation) -> tuple[str, str]:
+    """Return (display_label, tooltip_text) for a council bill's legislative status."""
+    raw = (legislation.status or "").strip()
+    low = raw.lower()
+
+    if "sign" in low:
+        return "Signed", _STATUS_TOOLTIPS["signed"]
+    if "veto" in low or "returned" in low:
+        return "Vetoed", _STATUS_TOOLTIPS["vetoed"]
+    if "pass" in low or "adopt" in low:
+        return "Passed", _STATUS_TOOLTIPS["passed"]
+    if "fail" in low or "defeat" in low:
+        return "Failed", _STATUS_TOOLTIPS["failed"]
+
+    # "In Committee" = actively being heard; "Referred" = assigned but not yet heard
+    try:
+        body = (legislation.crawl_data.controlling_body or "").strip()
+    except Exception:
+        body = ""
+
+    if "hear" in low or "in committee" in low:
+        if body and body.lower() not in _FULL_COUNCIL_BODIES:
+            return f"In Committee ({body})", _STATUS_TOOLTIPS["in_committee"]
+
+    return "Referred", _STATUS_TOOLTIPS["referred"]
 
 # ------------------------------------------------------------------------
 # Utilities for cleaning up text summaries and generating HTML
@@ -217,6 +258,11 @@ def _legislation_context(legislation: Legislation, style: SummarizationStyle) ->
     else:
         rendered_summary = _text_to_html_paragraphs(body)
 
+    is_council_bill = _COUNCIL_BILL_KIND in legislation.type
+    bill_status_label, bill_status_tooltip = (
+        _council_bill_status(legislation) if is_council_bill else (None, None)
+    )
+
     return {
         "legistar_id": legislation.legistar_id,
         "url": legislation.url,
@@ -227,6 +273,8 @@ def _legislation_context(legislation: Legislation, style: SummarizationStyle) ->
         "headline": headline,
         "summary_pending": summary is None,
         "summary": rendered_summary,
+        "bill_status_label": bill_status_label,
+        "bill_status_tooltip": bill_status_tooltip,
         "document_table_contexts": [
             _document_table_context(document, style)
             for document in legislation.documents.all()
@@ -372,6 +420,9 @@ def calendar(request, style: str):
             if key in seen:
                 continue
             seen.add(key)
+            # Only show Council Bills; other types are still summarized but hidden
+            if _COUNCIL_BILL_KIND not in legislation.kind:
+                continue
             if not LegislationSummary.objects.filter(
                 legislation=legislation, style=style
             ).exists():
@@ -386,7 +437,7 @@ def calendar(request, style: str):
                     "day_of_week": meeting.date.strftime("%A"),
                     "committee": meeting.crawl_data.department.name,
                     "meeting_id": meeting.legistar_id,
-                    "is_council_bill": "Council Bill" in kind,
+                    "is_council_bill": _COUNCIL_BILL_KIND in kind,
                     "is_informational": kind == "Informational",
                 }
             )
