@@ -606,22 +606,14 @@ h4.action-type {
   position: relative;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 1.1em;
-  height: 1.1em;
-  border-radius: 50%;
-  background-color: currentColor;
-  font-style: normal;
   cursor: help;
   flex-shrink: 0;
 }
 
-.bill-status-info::before {
-  content: 'i';
-  color: #fff;
-  font-size: 0.7em;
-  font-weight: 700;
-  line-height: 1;
+.bill-status-icon {
+  width: 1.1em;
+  height: 1.1em;
+  display: block;
 }
 
 /* Pure-CSS tooltip */
