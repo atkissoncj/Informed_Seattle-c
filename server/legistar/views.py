@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from django.conf import settings
 from django.http import Http404
@@ -25,6 +26,23 @@ _FULL_COUNCIL_BODIES = frozenset(
     {"full council", "seattle city council", "city council"}
 )
 
+# Seattle City Council member → district mapping (update after each election).
+# Districts 1-7 are geographic; "at-large" = Positions 8 & 9 (citywide).
+# Names must match what Legistar stores (lowercased for lookup).
+_COUNCIL_DISTRICTS: dict[str, int | str] = {
+    "rob saka": 1,
+    "tammy morales": 2,
+    "joy hollingsworth": 3,
+    "ron davis": 4,
+    "cathy moore": 5,
+    "dan strauss": 6,
+    "bob kettle": 7,
+    "tanya woo": "at-large",
+    "sara nelson": "at-large",
+}
+
+_NAME_PREFIXES = ("councilmember ", "council member ", "cm ", "councilmember. ")
+
 _STATUS_TOOLTIPS = {
     "signed": "Signed by Mayor, awaiting or completed codification",
     "vetoed": "Returned by Mayor without signature",
@@ -33,6 +51,56 @@ _STATUS_TOOLTIPS = {
     "in_committee": "Referred and awaiting or undergoing committee review",
     "referred": "Referred from Council to Committee",
 }
+
+
+def _normalize_member_name(raw: str) -> str:
+    """Strip honorific prefixes and lowercase a council member's name."""
+    name = raw.strip().lower()
+    for prefix in _NAME_PREFIXES:
+        if name.startswith(prefix):
+            name = name[len(prefix):]
+            break
+    return name
+
+
+def _classify_vote(vote_str: str) -> dict:
+    """Return in_favor/opposed/absent booleans for a raw vote string."""
+    low = vote_str.lower()
+    return {
+        "in_favor": "favor" in low,
+        "opposed": low in ("no", "against", "opposed") or "oppos" in low,
+        "absent": "absent" in low or "excused" in low,
+    }
+
+
+def _vote_rows_from_entry(entry: dict) -> list[dict]:
+    return entry.get("action", {}).get("rows", [])
+
+
+def _extract_district_votes(legislation) -> tuple[list[dict], list[dict]]:
+    """
+    Return (district_votes, at_large_votes) from stored vote_data.
+    Each item: {name, vote, in_favor, opposed, absent, district}.
+    Returns empty lists if no vote data is stored.
+    """
+    entries = (legislation.vote_data or {}).get("action_details", [])
+    district_votes: list[dict] = []
+    at_large_votes: list[dict] = []
+    seen: set[str] = set()
+
+    for entry in entries:
+        for row in _vote_rows_from_entry(entry):
+            name = (row.get("person") or {}).get("name", "").strip()
+            vote_str = (row.get("vote") or "").strip()
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            district = _COUNCIL_DISTRICTS.get(_normalize_member_name(name))
+            item = {"name": name, "vote": vote_str, "district": district, **_classify_vote(vote_str)}
+            (district_votes if isinstance(district, int) else at_large_votes).append(item)
+
+    district_votes.sort(key=lambda v: v["district"] if isinstance(v["district"], int) else 99)
+    return district_votes, at_large_votes
 
 
 def _council_bill_status(legislation) -> tuple[str, str]:
@@ -262,6 +330,9 @@ def _legislation_context(legislation: Legislation, style: SummarizationStyle) ->
     bill_status_label, bill_status_tooltip = (
         _council_bill_status(legislation) if is_council_bill else (None, None)
     )
+    district_votes, at_large_votes = (
+        _extract_district_votes(legislation) if is_council_bill else ([], [])
+    )
 
     return {
         "legistar_id": legislation.legistar_id,
@@ -275,6 +346,8 @@ def _legislation_context(legislation: Legislation, style: SummarizationStyle) ->
         "summary": rendered_summary,
         "bill_status_label": bill_status_label,
         "bill_status_tooltip": bill_status_tooltip,
+        "district_votes_json": json.dumps(district_votes),
+        "at_large_votes": at_large_votes,
         "document_table_contexts": [
             _document_table_context(document, style)
             for document in legislation.documents.all()

@@ -1,5 +1,9 @@
 {% extends "base.dhtml" %}
-{% block page_title %}Seattle City Council Bills{% if date_range_start and date_range_end %}: {{ date_range_start|date:"M j" }} - {{ date_range_end|date:"M j, Y" }}{% endif %}{% endblock page_title %}
+{% block extra_head %}
+  <link href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet">
+  <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+{% endblock extra_head %}
+{% block page_title %}Informed Seattle / Council Bills{% if date_range_start and date_range_end %}: {{ date_range_start|date:"M j" }} - {{ date_range_end|date:"M j, Y" }}{% endif %}{% endblock page_title %}
 
 {% block main %}
   <section class="intro-panel" id="intro-panel">
@@ -58,7 +62,7 @@
 {% block title %}
   <section class="title">
     <h1 class="big-title">
-      Seattle City Council Bills{% if date_range_start and date_range_end %}<br>
+      Informed Seattle / Council Bills{% if date_range_start and date_range_end %}<br>
       <span style="font-size: 0.65em; font-weight: 600;">{{ date_range_start|date:"M j" }} &ndash; {{ date_range_end|date:"M j, Y" }}</span>
       {% endif %}
     </h1>
@@ -114,6 +118,25 @@
           <time>Council Meeting Vote occurred on {{ entry.day_of_week }}, {{ entry.meeting_date|date:"F j, Y" }}</time>
           <p class="bill-committee">{{ entry.committee }}</p>
         </div>
+
+        {% if entry.legislation.district_votes_json != "[]" %}
+        <div class="bill-vote-map">
+          <div class="bill-map-canvas"
+               data-votes="{{ entry.legislation.district_votes_json }}"
+               aria-label="Seattle council district vote map"></div>
+          {% if entry.legislation.at_large_votes %}
+          <div class="bill-vote-at-large">
+            <span class="at-large-label">At-large</span>
+            {% for v in entry.legislation.at_large_votes %}
+              <span class="at-large-vote {% if v.in_favor %}vote-yes{% elif v.opposed %}vote-no{% else %}vote-absent{% endif %}">
+                {{ v.name }}&thinsp;&mdash;&thinsp;{{ v.vote }}
+              </span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
         <div class="content">
           {{ entry.legislation.summary | safe }}
         </div>

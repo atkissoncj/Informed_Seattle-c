@@ -55,6 +55,18 @@ jobs:
           restore-keys: ${{ runner.os }}-node-
       - name: Install node dependencies
         run: npm install
+      - name: Run database migrations
+        run: poetry run python manage.py migrate --run-syncdb
+        env:
+          DEBUG: NO
+          SECRET_KEY: lolwhatnope-super-secret-doesnt-matter
+
+      - name: Fetch and persist council vote data
+        run: poetry run python manage.py fetch_vote_data
+        env:
+          DEBUG: NO
+          SECRET_KEY: lolwhatnope-super-secret-doesnt-matter
+
       - name: Build static site
         run: |
           # Build site; distill copies static files to dist/Informed_Seattle/static/

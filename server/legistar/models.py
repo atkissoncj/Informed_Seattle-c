@@ -409,6 +409,10 @@ class Legislation(models.Model):
     )
     title = models.TextField(help_text="The title of the legislation.")
     raw_crawl_data = models.JSONField(default=dict, help_text="The raw crawl data.")
+    vote_data = models.JSONField(
+        default=dict,
+        help_text="Persisted council vote breakdown: {action_details: [{action_by, action}]}",
+    )
 
     documents = models.ManyToManyField(
         Document,
