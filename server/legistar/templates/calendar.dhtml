@@ -121,12 +121,6 @@
                  aria-label="Seattle council district vote map"></div>
           </div>
 
-          {% if entry.legislation.vote_date %}
-            <div class="vote-status-result">
-              {{ entry.legislation.bill_status_label }}
-            </div>
-          {% endif %}
-
           {% if entry.legislation.amendments %}
             <table class="amendment-table">
               <thead>
@@ -146,7 +140,7 @@
                 {% endfor %}
               </tbody>
             </table>
-          {% else %}
+          {% elif entry.legislation.vote_date %}
             <p class="no-amendments">This council bill had no amendments.</p>
           {% endif %}
         </div>
