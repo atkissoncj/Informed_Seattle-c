@@ -162,7 +162,7 @@ html {
 }
 
 body {
-  background-color: #f5f5f5;
+  background-color: #fff;
 }
 
 main {
@@ -392,7 +392,7 @@ a.view-link:hover {
   padding: 2rem 2rem 1.75rem;
   margin-bottom: 0;
   border-bottom: 1px solid #ddd;
-  background-color: #0a1223;
+  background-color: #fff;
 }
 
 .title-eyebrow {
@@ -400,7 +400,7 @@ a.view-link:hover {
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.55);
+  color: #999;
   margin-bottom: 0.35rem;
 }
 
@@ -408,7 +408,7 @@ a.view-link:hover {
   font-size: 2.25rem;
   line-height: 2.5rem;
   font-weight: 900;
-  color: #ffffff;
+  color: #121212;
 }
 
 .title-tagline {
@@ -417,7 +417,7 @@ a.view-link:hover {
   font-weight: 500;
   letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.6);
+  color: #999;
   margin-top: 0.6rem;
   margin-bottom: 0;
 }
@@ -428,7 +428,7 @@ a.view-link:hover {
   line-height: 1;
   vertical-align: middle;
   margin: 0 0.25em;
-  color: rgba(255, 255, 255, 0.35);
+  color: #ccc;
   font-family: serif;
 }
 
