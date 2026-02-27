@@ -4,8 +4,7 @@
   <link href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet">
   <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
   <style>
-    .intro-panel,
-    section.title {
+    .intro-panel {
       background-image: url("{% static 'seattle-skyline.jpg' %}");
       background-size: cover;
       background-position: center 35%;
