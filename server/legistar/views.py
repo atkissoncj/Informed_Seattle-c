@@ -171,20 +171,30 @@ _STRUCTURED_SECTION_HEADERS = frozenset({
 })
 
 
+_SKIP_SECTIONS = frozenset({"AMENDMENTS AND VOTES"})
+
+
 def _structured_summary_to_html(text: str):
-    """Convert a structured summary with section headers into HTML."""
+    """Convert a structured summary with section headers into HTML.
+
+    The AMENDMENTS AND VOTES section is omitted — member votes are
+    rendered separately via the interactive map and member grid.
+    """
     from django.utils.html import format_html
 
     lines = [s.strip() for s in text.split("\n")]
     html_parts = []
+    skip = False
     for line in lines:
         if not line:
             continue
         if line in _STRUCTURED_SECTION_HEADERS:
-            html_parts.append(
-                format_html('<h2 style="font-weight:700">{}</h2>', line.title())
-            )
-        else:
+            skip = line in _SKIP_SECTIONS
+            if not skip:
+                html_parts.append(
+                    format_html('<h2 style="font-weight:700">{}</h2>', line.title())
+                )
+        elif not skip:
             html_parts.append(format_html("<p>{}</p>", line))
     return "\n".join(html_parts)
 
@@ -362,6 +372,7 @@ def _legislation_context(legislation: Legislation, style: SummarizationStyle) ->
         "summary": rendered_summary,
         "bill_status_label": bill_status_label,
         "bill_status_tooltip": bill_status_tooltip,
+        "district_votes": district_votes,
         "district_votes_json": json.dumps(district_votes),
         "at_large_votes": at_large_votes,
         "vote_date": vote_date,

@@ -691,20 +691,29 @@ h4.action-type {
 
 .bill-map-pending-overlay {
   position: absolute;
-  bottom: 0.75rem;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 10;
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(4px);
-  border: 1px solid #e5e7eb;
-  border-radius: 20px;
-  padding: 0.35em 1em;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #6b7280;
-  white-space: nowrap;
+  background: rgba(243, 244, 246, 0.72);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   pointer-events: none;
+}
+
+.bill-map-pending-text {
+  background: #fff8e1;
+  border: 2px solid #f59e0b;
+  border-radius: 8px;
+  padding: 0.65rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #92400e;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.12);
 }
 
 /* At-large member vote row (displayed above the map) */
@@ -792,6 +801,28 @@ h4.action-type {
 .vp-yes  { background: #dcfce7; color: #166534; }
 .vp-no   { background: #fee2e2; color: #991b1b; }
 .vp-absent { background: #f3f4f6; color: #4b5563; }
+
+
+/* ---- Vote status labels (below map) ---- */
+
+
+.vote-status-result {
+  margin-top: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  display: inline-block;
+  background: #f3f4f6;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* ---- Action date label ---- */
+
+.bill-action-date-label {
+  font-weight: 600;
+  color: #555;
+}
 
 
 /* ---- Full-viewport intro panel ---- */
