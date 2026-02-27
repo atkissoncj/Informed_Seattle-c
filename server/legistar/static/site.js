@@ -122,6 +122,13 @@ function initBillMap(canvas, baseGeoJSON) {
     bounds: bounds,
     fitBoundsOptions: { padding: 24, animate: false },
     attributionControl: false,
+    scrollZoom: false,
+    boxZoom: false,
+    dragRotate: false,
+    dragPan: false,
+    keyboard: false,
+    doubleClickZoom: false,
+    touchZoomRotate: false,
   });
 
   var popup = new maplibregl.Popup({
