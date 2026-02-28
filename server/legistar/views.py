@@ -569,14 +569,6 @@ def calendar(request, style: str):
     # Sort by meeting date descending (newest first)
     bill_entries.sort(key=lambda e: e["meeting_date"], reverse=True)
 
-    # Compute date range
-    if bill_entries:
-        date_range_start = min(e["meeting_date"] for e in bill_entries)
-        date_range_end = max(e["meeting_date"] for e in bill_entries)
-    else:
-        date_range_start = None
-        date_range_end = None
-
     # Crawl metadata
     crawl_meta = CrawlMetadata.get_instance()
     last_crawl_at = crawl_meta.last_crawl_at if crawl_meta else None
@@ -594,6 +586,19 @@ def calendar(request, style: str):
     else:
         next_crawl_at = None
         next_crawl_delta_days = None
+
+    # Compute date range: crawl date through day before next crawl (7-day window)
+    if last_crawl_at:
+        date_range_start = last_crawl_at.date()
+        date_range_end = (
+            last_crawl_at + datetime.timedelta(days=settings.CRAWL_INTERVAL_DAYS - 1)
+        ).date()
+    elif bill_entries:
+        date_range_start = min(e["meeting_date"] for e in bill_entries)
+        date_range_end = max(e["meeting_date"] for e in bill_entries)
+    else:
+        date_range_start = None
+        date_range_end = None
 
     return render(
         request,
