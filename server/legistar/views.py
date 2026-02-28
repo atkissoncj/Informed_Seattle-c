@@ -587,15 +587,17 @@ def calendar(request, style: str):
         next_crawl_at = None
         next_crawl_delta_days = None
 
-    # Compute date range: crawl date through day before next crawl (7-day window)
-    if last_crawl_at:
+    # Compute date range: earliest meeting date through 7 days later (1-week window)
+    if bill_entries:
+        date_range_start = min(e["meeting_date"] for e in bill_entries)
+        date_range_end = date_range_start + datetime.timedelta(
+            days=settings.CRAWL_INTERVAL_DAYS
+        )
+    elif last_crawl_at:
         date_range_start = last_crawl_at.date()
         date_range_end = (
             last_crawl_at + datetime.timedelta(days=settings.CRAWL_INTERVAL_DAYS - 1)
         ).date()
-    elif bill_entries:
-        date_range_start = min(e["meeting_date"] for e in bill_entries)
-        date_range_end = max(e["meeting_date"] for e in bill_entries)
     else:
         date_range_start = None
         date_range_end = None
