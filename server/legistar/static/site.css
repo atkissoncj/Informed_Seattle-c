@@ -837,6 +837,7 @@ h4.action-type {
 .vp-yes  { background: #dcfce7; color: #166534; }
 .vp-no   { background: #fee2e2; color: #991b1b; }
 .vp-absent { background: #f3f4f6; color: #4b5563; }
+.vp-upcoming { background: #eff6ff; color: #1d4ed8; }
 
 
 /* ---- Vote status labels (below map) ---- */

@@ -54,6 +54,15 @@ var DISTRICT_GEOJSON_URL =
   "https://raw.githubusercontent.com/seattleio/seattle-boundaries-data/master/data/city-council-districts.geojson";
 var MAP_STYLE = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 var VOTE_COLORS = { yes: "#16a34a", no: "#dc2626", absent: "#9ca3af", unknown: "#e5e7eb" };
+var DISTRICT_MEMBERS = {
+  1: "Rob Saka",
+  2: "Eddie Lin",
+  3: "Joy Hollingsworth",
+  4: "Maritza Rivera",
+  5: "Debora Juarez",
+  6: "Dan Strauss",
+  7: "Robert Kettle",
+};
 
 function voteColor(v) {
   if (!v) return VOTE_COLORS.unknown;
@@ -216,7 +225,34 @@ function initBillMap(canvas, baseGeoJSON) {
         popup.remove();
       });
     } else {
-      // Pending state: overlay label
+      // Pending state: hover shows district + member name + "Vote upcoming"
+      map.on("mousemove", "district-fills", function (ev) {
+        map.getCanvas().style.cursor = "pointer";
+        if (hoveredId !== null) {
+          map.setFeatureState({ source: "districts", id: hoveredId }, { hover: false });
+        }
+        hoveredId = ev.features[0].id;
+        map.setFeatureState({ source: "districts", id: hoveredId }, { hover: true });
+
+        var p = ev.features[0].properties;
+        var memberName = DISTRICT_MEMBERS[p.district] || "";
+        popup.setLngLat(ev.lngLat).setHTML(
+          '<div class="vp-district">District ' + p.district + "</div>" +
+          (memberName ? '<div class="vp-name">' + memberName + "</div>" : "") +
+          '<div class="vp-vote vp-upcoming">Vote upcoming</div>'
+        ).addTo(map);
+      });
+
+      map.on("mouseleave", "district-fills", function () {
+        map.getCanvas().style.cursor = "";
+        if (hoveredId !== null) {
+          map.setFeatureState({ source: "districts", id: hoveredId }, { hover: false });
+        }
+        hoveredId = null;
+        popup.remove();
+      });
+
+      // Bottom label
       var overlay = document.createElement("div");
       overlay.className = "bill-map-pending-overlay";
       var label = document.createElement("div");
