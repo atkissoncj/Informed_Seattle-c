@@ -411,7 +411,10 @@ class Legislation(models.Model):
     raw_crawl_data = models.JSONField(default=dict, help_text="The raw crawl data.")
     vote_data = models.JSONField(
         default=dict,
-        help_text="Persisted council vote breakdown: {action_details: [{action_by, action}]}",
+        help_text=(
+            "Persisted council vote breakdown: "
+            "{action_details: [{action_by, action}]}"
+        ),
     )
     has_amendment_docs = models.BooleanField(
         default=False,
@@ -647,15 +650,15 @@ class AmendmentSummary(models.Model):
     )
     sponsors = models.JSONField(
         default=list,
-        help_text='List of sponsor/author names, e.g. [{"name": "Councilmember Rivera"}].',
+        help_text='List of sponsor/author names, e.g. [{"name": "Councilmember Rivera"}].',  # noqa: E501
     )
     effect_statement = models.TextField(
         blank=True,
-        help_text="Effect Statement extracted from the amendment, attributed to sponsor(s).",
+        help_text="Effect Statement extracted from the amendment, attributed to sponsor(s).",  # noqa: E501
     )
     normative_summary = models.TextField(
         blank=True,
-        help_text="LLM summary embracing the normative/policy language of the amendment.",
+        help_text="LLM summary embracing the normative/policy language of the amendment.",  # noqa: E501
     )
     technical_changes = models.TextField(
         blank=True,

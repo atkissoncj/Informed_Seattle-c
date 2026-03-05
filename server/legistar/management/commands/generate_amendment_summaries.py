@@ -282,7 +282,10 @@ class Command(BaseCommand):
         parser.add_argument(
             "--force",
             action="store_true",
-            help="Re-process amendment documents even if an AmendmentSummary already exists.",
+            help=(
+                "Re-process amendment documents even if an "
+                "AmendmentSummary already exists."
+            ),
         )
         parser.add_argument(
             "--pk",

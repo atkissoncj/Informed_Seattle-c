@@ -84,7 +84,7 @@ def _vote_rows_from_entry(entry: dict) -> list[dict]:
 
 
 def _is_district_seat(district) -> bool:
-    """Return True for geographic district seats (1-7), False for at-large (8-9) or unknown."""
+    """Return True for geographic district seats (1-7), False for at-large (8-9) or unknown."""  # noqa: E501
     return isinstance(district, int) and district <= 7
 
 
@@ -137,9 +137,9 @@ def _extract_district_votes(legislation) -> tuple[list[dict], list[dict]]:
                 item
             )
 
-    _seat_order = (
-        lambda v: v["district"] if isinstance(v["district"], int) else 99
-    )  # noqa: E731
+    def _seat_order(v):
+        return v["district"] if isinstance(v["district"], int) else 99  # noqa: E731
+
     district_votes.sort(key=_seat_order)
     at_large_votes.sort(key=_seat_order)
     return district_votes, at_large_votes

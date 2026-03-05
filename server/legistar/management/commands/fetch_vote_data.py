@@ -4,7 +4,7 @@ import json
 
 from django.core.management.base import BaseCommand
 
-from server.legistar.models import Legislation, _fetch_action_details_for_legislation
+from server.legistar.models import Legislation
 
 # Bodies that represent a Full Council vote (lowercased)
 _FULL_COUNCIL_BODIES = frozenset(
