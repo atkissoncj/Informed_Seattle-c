@@ -73,7 +73,9 @@ def _extract_sponsors(olmo, text: str) -> list[dict]:
 def _extract_effect_statement(olmo, text: str, sponsors: list[dict]) -> str:
     """Extract the Effect Statement, attributed to sponsor(s)."""
     excerpt = text[:2500]
-    sponsor_names = ", ".join(s["name"] for s in sponsors) if sponsors else "the sponsor"
+    sponsor_names = (
+        ", ".join(s["name"] for s in sponsors) if sponsors else "the sponsor"
+    )
     prompt = (
         "From the following Seattle City Council amendment text, extract the "
         "Effect Statement section verbatim. If no labeled 'Effect Statement' "
@@ -132,9 +134,7 @@ def _generate_technical_changes(olmo, text: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _match_amendment_votes(
-    legislation, amendment_number: str
-) -> tuple[dict, bool]:
+def _match_amendment_votes(legislation, amendment_number: str) -> tuple[dict, bool]:
     """
     Find votes for this amendment from the legislation's vote_data.
 
@@ -171,8 +171,13 @@ def _match_amendment_votes(
             if rows:
                 # Relabel votes as "Pass as Amended"
                 amended_rows = [
-                    {**r, "vote": "Pass as Amended", "in_favor": True,
-                     "opposed": False, "absent": False}
+                    {
+                        **r,
+                        "vote": "Pass as Amended",
+                        "in_favor": True,
+                        "opposed": False,
+                        "absent": False,
+                    }
                     for r in rows
                 ]
                 return {"rows": amended_rows}, True
@@ -195,9 +200,7 @@ def _rows_from_entry(entry: dict) -> list[dict]:
 
 def _process_legislation(legislation, force: bool, olmo) -> None:
     """Detect amendment docs, update flag, and create AmendmentSummary rows."""
-    supporting_docs = list(
-        legislation.documents.filter(kind="supporting_document")
-    )
+    supporting_docs = list(legislation.documents.filter(kind="supporting_document"))
     amendment_docs = [d for d in supporting_docs if _is_amendment_document(d)]
 
     # Update the flag
@@ -207,9 +210,12 @@ def _process_legislation(legislation, force: bool, olmo) -> None:
         legislation.save(update_fields=["has_amendment_docs"])
 
     for doc in amendment_docs:
-        if not force and AmendmentSummary.objects.filter(
-            legislation=legislation, document=doc
-        ).exists():
+        if (
+            not force
+            and AmendmentSummary.objects.filter(
+                legislation=legislation, document=doc
+            ).exists()
+        ):
             print(
                 f"  [skip] Amendment already summarized: {doc.title}",
                 file=sys.stderr,
@@ -292,13 +298,16 @@ class Command(BaseCommand):
         if pk is not None:
             legislations = Legislation.objects.filter(pk=pk)
         else:
-            legislations = Legislation.objects.filter(type__icontains=_COUNCIL_BILL_KIND)
+            legislations = Legislation.objects.filter(
+                type__icontains=_COUNCIL_BILL_KIND
+            )
 
         total = legislations.count()
         self.stderr.write(f"Processing {total} Council Bill(s)...")
 
         # Load OLMo once; it's a ~6 GB model so we want a single instance
         from server.lib.olmo_client import get_olmo_client
+
         olmo = get_olmo_client()
 
         for i, legislation in enumerate(legislations.iterator(), start=1):

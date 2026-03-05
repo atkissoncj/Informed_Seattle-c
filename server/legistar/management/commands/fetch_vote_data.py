@@ -90,7 +90,5 @@ class Command(BaseCommand):
                 skipped += 1
 
         self.stdout.write(
-            self.style.SUCCESS(
-                f"Done. Fetched: {fetched}, Skipped/no votes: {skipped}"
-            )
+            self.style.SUCCESS(f"Done. Fetched: {fetched}, Skipped/no votes: {skipped}")
         )

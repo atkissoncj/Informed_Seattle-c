@@ -31,20 +31,22 @@ _FULL_COUNCIL_BODIES = frozenset(
 # Names must match exactly what Legistar stores (lowercased for lookup).
 # Last updated: 2025-2026 council seated after November 2025 elections.
 _COUNCIL_DISTRICTS: dict[str, int] = {
-    "rob saka": 1,           # District 1
-    "eddie lin": 2,           # District 2
-    "joy hollingsworth": 3,   # District 3
-    "maritza rivera": 4,      # District 4
-    "debora juarez": 5,       # District 5 (appointed July 2025)
-    "dan strauss": 6,         # District 6
-    "robert kettle": 7,       # District 7
+    "rob saka": 1,  # District 1
+    "eddie lin": 2,  # District 2
+    "joy hollingsworth": 3,  # District 3
+    "maritza rivera": 4,  # District 4
+    "debora juarez": 5,  # District 5 (appointed July 2025)
+    "dan strauss": 6,  # District 6
+    "robert kettle": 7,  # District 7
     "alexis mercedes rinck": 8,  # Position 8 — At-Large
-    "dionne foster": 9,          # Position 9 — At-Large
+    "dionne foster": 9,  # Position 9 — At-Large
 }
 
 _NAME_PREFIXES = ("councilmember ", "council member ", "cm ", "councilmember. ")
 
-_AMENDMENT_KEYWORDS = frozenset({"amend", "substitute", "revised", "modified", "changed"})
+_AMENDMENT_KEYWORDS = frozenset(
+    {"amend", "substitute", "revised", "modified", "changed"}
+)
 
 
 _STATUS_TOOLTIPS = {
@@ -62,7 +64,7 @@ def _normalize_member_name(raw: str) -> str:
     name = raw.strip().lower()
     for prefix in _NAME_PREFIXES:
         if name.startswith(prefix):
-            name = name[len(prefix):]
+            name = name[len(prefix) :]
             break
     return name
 
@@ -93,12 +95,14 @@ def _extract_amendments(legislation) -> list[dict]:
         for row in legislation.crawl_data.rows:
             action = (row.action or "").lower()
             if any(kw in action for kw in _AMENDMENT_KEYWORDS):
-                amendments.append({
-                    "date": row.date,
-                    "action": row.action,
-                    "action_by": row.action_by or "",
-                    "result": row.result or "",
-                })
+                amendments.append(
+                    {
+                        "date": row.date,
+                        "action": row.action,
+                        "action_by": row.action_by or "",
+                        "result": row.result or "",
+                    }
+                )
     except Exception:
         pass
     return amendments
@@ -123,10 +127,19 @@ def _extract_district_votes(legislation) -> tuple[list[dict], list[dict]]:
                 continue
             seen.add(name)
             district = _COUNCIL_DISTRICTS.get(_normalize_member_name(name))
-            item = {"name": name, "vote": vote_str, "district": district, **_classify_vote(vote_str)}
-            (district_votes if _is_district_seat(district) else at_large_votes).append(item)
+            item = {
+                "name": name,
+                "vote": vote_str,
+                "district": district,
+                **_classify_vote(vote_str),
+            }
+            (district_votes if _is_district_seat(district) else at_large_votes).append(
+                item
+            )
 
-    _seat_order = lambda v: v["district"] if isinstance(v["district"], int) else 99  # noqa: E731
+    _seat_order = (
+        lambda v: v["district"] if isinstance(v["district"], int) else 99
+    )  # noqa: E731
     district_votes.sort(key=_seat_order)
     at_large_votes.sort(key=_seat_order)
     return district_votes, at_large_votes
@@ -168,6 +181,7 @@ def _council_bill_status(legislation) -> tuple[str, str]:
 
     return "Referred", _STATUS_TOOLTIPS["referred"]
 
+
 # ------------------------------------------------------------------------
 # Utilities for cleaning up text summaries and generating HTML
 # ------------------------------------------------------------------------
@@ -184,12 +198,14 @@ def _text_to_html_paragraphs(text: str):
     return format_html_join("\n", "<p>{}</p>", ((s,) for s in splits if s))
 
 
-_STRUCTURED_SECTION_HEADERS = frozenset({
-    "WHAT WAS ORIGINALLY PROPOSED",
-    "AMENDMENTS AND VOTES",
-    "WHAT THE FINAL TEXT DOES",
-    "WHAT CHANGED FROM THE ORIGINAL",
-})
+_STRUCTURED_SECTION_HEADERS = frozenset(
+    {
+        "WHAT WAS ORIGINALLY PROPOSED",
+        "AMENDMENTS AND VOTES",
+        "WHAT THE FINAL TEXT DOES",
+        "WHAT CHANGED FROM THE ORIGINAL",
+    }
+)
 
 
 _SKIP_SECTIONS = frozenset({"AMENDMENTS AND VOTES"})

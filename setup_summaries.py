@@ -8,12 +8,18 @@ import sys
 import django
 
 # Setup Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'server.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "server.settings")
 django.setup()
 
 from server.documents.models import Document, DocumentSummary
-from server.legistar.models import Legislation, LegislationSummary, Meeting, MeetingSummary
+from server.legistar.models import (
+    Legislation,
+    LegislationSummary,
+    Meeting,
+    MeetingSummary,
+)
 from server.lib.style import SUMMARIZATION_STYLES
+
 
 def extract_all_documents():
     """Extract text from all documents."""
@@ -39,6 +45,7 @@ def extract_all_documents():
             print(f"  ✗ Error: {e}")
 
     print()
+
 
 def summarize_all_documents():
     """Summarize all documents."""
@@ -78,6 +85,7 @@ def summarize_all_documents():
 
     print()
 
+
 _FAILED_HEADLINE = "Unable to summarize (see logs)"
 
 
@@ -97,7 +105,9 @@ def clear_failed_summaries():
             if any(leg.id in failed_leg_ids for leg in meeting.legislations):
                 deleted = MeetingSummary.objects.filter(meeting=meeting).delete()
                 if deleted[0] > 0:
-                    print(f"  Cleared meeting summary for meeting {meeting.legistar_id}")
+                    print(
+                        f"  Cleared meeting summary for meeting {meeting.legistar_id}"
+                    )
         failed_leg.delete()
         print(f"Cleared {leg_count} failed legislation summaries for retry")
     else:
@@ -133,9 +143,7 @@ def clear_council_bill_summaries():
 
     # Delete meeting summaries that depend on these Council Bills
     for meeting in Meeting.objects.filter(time__isnull=False):
-        has_cb = any(
-            "Council Bill" in leg.type for leg in meeting.legislations
-        )
+        has_cb = any("Council Bill" in leg.type for leg in meeting.legislations)
         if has_cb:
             deleted = MeetingSummary.objects.filter(meeting=meeting).delete()
             if deleted[0] > 0:
@@ -163,24 +171,30 @@ def summarize_all_legislation():
         print(f"\nUsing style: {style}")
         for i, legislation in enumerate(legislations, 1):
             # Skip if already summarized
-            if LegislationSummary.objects.filter(legislation=legislation, style=style).exists():
+            if LegislationSummary.objects.filter(
+                legislation=legislation, style=style
+            ).exists():
                 print(f"[{i}/{total}] {legislation.record_no}: (already summarized)")
                 continue
 
             # Check if all documents are summarized
             doc_count = legislation.documents.count()
             summarized_doc_count = DocumentSummary.objects.filter(
-                document__in=legislation.documents.all(),
-                style=style
+                document__in=legislation.documents.all(), style=style
             ).count()
 
             if doc_count > 0 and summarized_doc_count < doc_count:
-                print(f"[{i}/{total}] {legislation.record_no}: ⚠ Missing document summaries ({summarized_doc_count}/{doc_count})")
+                print(
+                    f"[{i}/{total}] {legislation.record_no}: ⚠ Missing document summaries ({summarized_doc_count}/{doc_count})"
+                )
                 continue
 
             try:
                 print(f"[{i}/{total}] Summarizing: {legislation.record_no}...")
-                summary, created = LegislationSummary.manager.get_or_create_from_legislation(
+                (
+                    summary,
+                    created,
+                ) = LegislationSummary.manager.get_or_create_from_legislation(
                     legislation, style
                 )
                 if created:
@@ -191,6 +205,7 @@ def summarize_all_legislation():
                 print(f"  ✗ Error: {e}")
 
     print()
+
 
 def summarize_all_meetings():
     """Summarize all meetings."""
@@ -212,18 +227,21 @@ def summarize_all_meetings():
         for i, meeting in enumerate(meetings, 1):
             # Skip if already summarized
             if MeetingSummary.objects.filter(meeting=meeting, style=style).exists():
-                print(f"[{i}/{total}] Meeting {meeting.legistar_id}: (already summarized)")
+                print(
+                    f"[{i}/{total}] Meeting {meeting.legistar_id}: (already summarized)"
+                )
                 continue
 
             # Check if all legislation is summarized
             leg_count = meeting.legislations.count()
             summarized_leg_count = LegislationSummary.objects.filter(
-                legislation__in=meeting.legislations,
-                style=style
+                legislation__in=meeting.legislations, style=style
             ).count()
 
             if leg_count > 0 and summarized_leg_count < leg_count:
-                print(f"[{i}/{total}] Meeting {meeting.legistar_id}: ⚠ Missing legislation summaries ({summarized_leg_count}/{leg_count})")
+                print(
+                    f"[{i}/{total}] Meeting {meeting.legistar_id}: ⚠ Missing legislation summaries ({summarized_leg_count}/{leg_count})"
+                )
                 continue
 
             try:
@@ -239,6 +257,7 @@ def summarize_all_meetings():
                 print(f"  ✗ Error: {e}")
 
     print()
+
 
 def main():
     """Run the complete summarization pipeline."""
@@ -275,8 +294,10 @@ def main():
     except Exception as e:
         print(f"\n\n✗ Pipeline failed: {e}")
         import traceback
+
         traceback.print_exc()
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

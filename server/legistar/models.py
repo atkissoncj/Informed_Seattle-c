@@ -647,7 +647,7 @@ class AmendmentSummary(models.Model):
     )
     sponsors = models.JSONField(
         default=list,
-        help_text="List of sponsor/author names, e.g. [{\"name\": \"Councilmember Rivera\"}].",
+        help_text='List of sponsor/author names, e.g. [{"name": "Councilmember Rivera"}].',
     )
     effect_statement = models.TextField(
         blank=True,
