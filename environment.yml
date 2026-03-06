@@ -37,6 +37,9 @@ dependencies:
     - accelerate>=0.25.0
     - sentencepiece
 
+    # Claude evaluation
+    - anthropic>=0.49
+
     # Utilities
     - python-dotenv
     - pillow
