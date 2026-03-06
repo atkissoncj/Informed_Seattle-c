@@ -118,6 +118,14 @@ OPENAI_ORGANIZATION = os.environ.get("OPENAI_ORGANIZATION")
 
 
 # --------------------------------------------------------------------
+# Anthropic / Claude config
+# --------------------------------------------------------------------
+
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
+ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5")
+
+
+# --------------------------------------------------------------------
 # Static & Media files
 # --------------------------------------------------------------------
 

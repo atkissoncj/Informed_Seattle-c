@@ -699,6 +699,67 @@ class AmendmentSummary(models.Model):
         )
 
 
+class SummaryEvaluation(models.Model):
+    """
+    Claude-powered evaluation of an OLMo-generated LegislationSummary.
+
+    Populated by the `evaluate-summaries` management command, which sends
+    the source bill text and OLMo summary to Claude and asks it to score
+    each rubric dimension on completeness (1-5) and faithfulness (1-5).
+
+    scores JSON shape:
+    {
+      "headline_accuracy":        {"completeness": int, "faithfulness": int, "reasoning": str},
+      "proposed_intent_fidelity": {"completeness": int, "faithfulness": int, "reasoning": str},
+      "final_text_fidelity":      {"completeness": int, "faithfulness": int, "reasoning": str},
+      "amendment_accuracy":       {"completeness": int, "faithfulness": int, "reasoning": str},
+      "accessibility":            {"completeness": int, "faithfulness": int, "reasoning": str},
+      "neutrality":               {"completeness": int, "faithfulness": int, "reasoning": str},
+    }
+    """
+
+    legislation_summary = models.OneToOneField(
+        LegislationSummary,
+        on_delete=models.CASCADE,
+        related_name="evaluation",
+        help_text="The OLMo-generated legislation summary being evaluated.",
+    )
+    scores = models.JSONField(
+        default=dict,
+        help_text=(
+            "Per-dimension rubric scores: each key maps to "
+            "{completeness: 1-5, faithfulness: 1-5, reasoning: str}."
+        ),
+    )
+    overall_completeness = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Mean completeness score across all rubric dimensions (1-5).",
+    )
+    overall_faithfulness = models.FloatField(
+        null=True,
+        blank=True,
+        help_text="Mean faithfulness score across all rubric dimensions (1-5).",
+    )
+    claude_model = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="The Claude model ID used to generate this evaluation.",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Summary evaluation"
+        verbose_name_plural = "Summary evaluations"
+
+    def __str__(self):
+        return (
+            f"Evaluation for {self.legislation_summary.legislation.record_no} "
+            f"({self.legislation_summary.style})"
+        )
+
+
 class CrawlMetadata(models.Model):
     """
     Singleton model that tracks when the last crawl happened.

@@ -49,6 +49,7 @@ jobs:
           OLMO_MAX_LENGTH=2048
           CRAWL_INTERVAL_DAYS=7
           CRAWL_TIME=01:30
+          ANTHROPIC_API_KEY=${{ secrets.ANTHROPIC_API_KEY }}
           EOF
 
       - name: Run database migrations
@@ -76,6 +77,10 @@ jobs:
       - name: Generate amendment summaries
         shell: micromamba-shell {0}
         run: python manage.py generate_amendment_summaries --limit 20
+
+      - name: Evaluate summaries with Claude
+        shell: micromamba-shell {0}
+        run: python manage.py evaluate_summaries --limit 20
 
       - name: Build static site
         shell: micromamba-shell {0}
