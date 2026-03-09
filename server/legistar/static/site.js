@@ -301,7 +301,20 @@ function initAllBillMaps() {
   if (!canvases.length) return;
   fetch(DISTRICT_GEOJSON_URL)
     .then(function (r) { return r.json(); })
-    .then(function (geojson) { canvases.forEach(function (c) { initBillMap(c, geojson); }); })
+    .then(function (geojson) {
+      // Lazily initialize each map only when it scrolls near the viewport.
+      // This avoids exhausting the browser's WebGL context limit (~8-16 per page)
+      // which would cause the first-initialized maps to lose their context.
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            observer.unobserve(entry.target);
+            initBillMap(entry.target, geojson);
+          }
+        });
+      }, { rootMargin: "300px" });
+      canvases.forEach(function (c) { observer.observe(c); });
+    })
     .catch(function (err) { console.warn("Could not load Seattle district GeoJSON:", err); });
 }
 
