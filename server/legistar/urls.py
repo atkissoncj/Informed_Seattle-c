@@ -32,6 +32,13 @@ urlpatterns = [
         distill_func=views.distill_documents,
         distill_file="document/{meeting_id}/{legislation_id}/{document_pk}/{style}/index.html",
     ),
+    distill_path(
+        "previous-legislation/<slug:style>/",
+        views.previous_legislation,
+        name="previous_legislation",
+        distill_func=views.distill_previous_legislation,
+        distill_file="previous-legislation/{style}/index.html",
+    ),
     distill_path("", views.index, name="index", distill_file="index.html"),
     distill_path(
         "evaluations/",

@@ -1,0 +1,107 @@
+{% extends "base.dhtml" %}
+{% load static %}
+{% block extra_head %}
+  <link href="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet">
+  <script src="https://unpkg.com/maplibre-gl@4/dist/maplibre-gl.js"></script>
+{% endblock extra_head %}
+{% block page_title %}Previous Legislation &mdash; Informed Seattle{% endblock page_title %}
+{% block title %}
+  <section class="title">
+    <p class="title-eyebrow">Learn: A Proof of Concept Seattle Legislative Plain-Text Translator</p>
+    <h1 class="big-title">Previous Legislation</h1>
+    <p class="title-tagline">Learn<span class="tagline-dot">&bull;</span>Connect<span class="tagline-dot">&bull;</span>Engage</p>
+    <p class="title-eval-link"><a href="../../calendar/{{ style }}/">&larr; Back to current bills</a></p>
+  </section>
+{% endblock title %}
+{% block content %}
+
+  {% for entry in bill_entries %}
+    <article class="bill-entry">
+      <h4 class="action-type">
+        {{ entry.legislation.kind }}
+        {% if entry.is_council_bill and entry.legislation.bill_status_label %}
+          <span class="bill-status">
+            {{ entry.legislation.bill_status_label }}
+            <span class="bill-status-info" aria-label="Status information">
+              <svg class="bill-status-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a.75.75 0 000 1.5h.253a.25.25 0 01.244.304l-.459 2.066A1.75 1.75 0 0010.747 15H11a.75.75 0 000-1.5h-.253a.25.25 0 01-.244-.304l.459-2.066A1.75 1.75 0 009.253 9H9z" clip-rule="evenodd"/>
+              </svg>
+              <span class="bill-status-tooltip">{{ entry.legislation.bill_status_tooltip }}</span>
+            </span>
+          </span>
+        {% endif %}
+      </h4>
+
+      {% if entry.is_informational %}
+        <details class="bill-accordion">
+          <summary>
+            <span class="accordion-title">{{ entry.legislation.headline }}</span>
+          </summary>
+          <div class="accordion-body">
+            <p class="bill-meta">{{ entry.legislation.kind }} {{ entry.legislation.title }}</p>
+            <time>Council Meeting Vote occurred on {{ entry.day_of_week }}, {{ entry.meeting_date|date:"F j, Y" }}</time>
+            <p class="bill-committee">{{ entry.committee }}</p>
+            <div class="content">
+              {{ entry.legislation.summary | safe }}
+            </div>
+          </div>
+        </details>
+      {% else %}
+        <div class="header">
+          <h1>
+            <a href="{{ entry.legislation.url }}" target="_blank">{{ entry.legislation.headline }}</a>
+          </h1>
+          <p class="bill-meta">{{ entry.legislation.kind }} {{ entry.legislation.title }}</p>
+          <time class="bill-action-date"><span class="bill-action-date-label">Date of Council Action:</span> {% if entry.legislation.vote_date %}{{ entry.legislation.vote_date|date:"F j, Y" }}{% else %}{{ entry.meeting_date|date:"F j, Y" }}{% endif %}</time>
+        </div>
+
+        <div class="vote-map-section">
+          <h3 class="vote-map-title">Amendments &amp; Votes</h3>
+
+          <div class="bill-vote-map">
+            <div class="bill-map-canvas"
+                 data-votes="{{ entry.legislation.district_votes_json }}"
+                 data-amendments="{{ entry.legislation.amendments_json }}"
+                 aria-label="Seattle council district vote map"></div>
+          </div>
+
+          {% if entry.legislation.amendments %}
+            <table class="amendment-table">
+              <thead>
+                <tr>
+                  <th>Member / Body</th>
+                  <th>Amendment</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for amendment in entry.legislation.amendments %}
+                  <tr>
+                    <td>{{ amendment.action_by }}</td>
+                    <td class="amendment-text">{{ amendment.action }}</td>
+                    <td class="amendment-date">{{ amendment.date|date:"M j, Y" }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% endif %}
+        </div>
+
+        {% if entry.legislation.summary_what_changed %}
+        <div class="content">
+          {{ entry.legislation.summary_what_changed | safe }}
+        </div>
+        {% endif %}
+
+        <div class="content">
+          {{ entry.legislation.summary_without_what_changed | safe }}
+        </div>
+      {% endif %}
+    </article>
+  {% empty %}
+    <p>No previous legislation found.</p>
+  {% endfor %}
+
+  <p class="title-eval-link" style="margin-top: 2rem;"><a href="../../calendar/{{ style }}/">&larr; Back to current bills</a></p>
+
+{% endblock content %}

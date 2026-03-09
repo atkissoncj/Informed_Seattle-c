@@ -610,6 +610,45 @@ def distill_documents():
 # ------------------------------------------------------------------------
 
 
+def _build_previous_bill_entries(style: str, exclude_pks: set | None = None) -> list:
+    """Return bill-entry dicts for all council bills older than the crawl window."""
+    cutoff_date = datetime.date.today() - datetime.timedelta(
+        days=settings.CRAWL_INTERVAL_DAYS
+    )
+    seen_pks = set(exclude_pks or [])
+    entries = []
+    older_meetings = (
+        Meeting.manager.active().filter(date__lt=cutoff_date).order_by("-date")
+    )
+    for meeting in older_meetings:
+        for legislation in meeting.legislations:
+            if legislation.pk in seen_pks:
+                continue
+            seen_pks.add(legislation.pk)
+            if _COUNCIL_BILL_KIND not in legislation.kind:
+                continue
+            if not LegislationSummary.objects.filter(
+                legislation=legislation, style=style
+            ).exists():
+                continue
+            leg_context = _legislation_context(legislation, style)
+            kind = leg_context["kind"]
+            leg_context["summary"] = leg_context["summary"].replace("*", "")
+            entries.append(
+                {
+                    "legislation": leg_context,
+                    "meeting_date": meeting.date,
+                    "day_of_week": meeting.date.strftime("%A"),
+                    "committee": meeting.crawl_data.department.name,
+                    "meeting_id": meeting.legistar_id,
+                    "is_council_bill": _COUNCIL_BILL_KIND in kind,
+                    "is_informational": kind == "Informational",
+                }
+            )
+    entries.sort(key=lambda e: e["meeting_date"], reverse=True)
+    return entries
+
+
 @require_GET
 def calendar(request, style: str):
     """Render the calendar page as a bill-centric view."""
@@ -656,38 +695,9 @@ def calendar(request, style: str):
     # Sort by meeting date descending (newest first)
     bill_entries.sort(key=lambda e: e["meeting_date"], reverse=True)
 
-    # Build previous legislation: council bills from meetings before the cutoff
-    previous_bill_entries = []
-    seen_legislation = {pk for (pk, _) in seen}
-    older_meetings = (
-        Meeting.manager.active().filter(date__lt=cutoff_date).order_by("-date")
+    previous_bill_entries = _build_previous_bill_entries(
+        style, exclude_pks={pk for (pk, _) in seen}
     )
-    for meeting in older_meetings:
-        for legislation in meeting.legislations:
-            if legislation.pk in seen_legislation:
-                continue
-            seen_legislation.add(legislation.pk)
-            if _COUNCIL_BILL_KIND not in legislation.kind:
-                continue
-            if not LegislationSummary.objects.filter(
-                legislation=legislation, style=style
-            ).exists():
-                continue
-            leg_context = _legislation_context(legislation, style)
-            kind = leg_context["kind"]
-            leg_context["summary"] = leg_context["summary"].replace("*", "")
-            previous_bill_entries.append(
-                {
-                    "legislation": leg_context,
-                    "meeting_date": meeting.date,
-                    "day_of_week": meeting.date.strftime("%A"),
-                    "committee": meeting.crawl_data.department.name,
-                    "meeting_id": meeting.legistar_id,
-                    "is_council_bill": _COUNCIL_BILL_KIND in kind,
-                    "is_informational": kind == "Informational",
-                }
-            )
-    previous_bill_entries.sort(key=lambda e: e["meeting_date"], reverse=True)
 
     # Crawl metadata
     crawl_meta = CrawlMetadata.get_instance()
@@ -799,6 +809,19 @@ def document(
 
 
 @require_GET
+def previous_legislation(request, style: str):
+    """Render the previous-legislation page."""
+    if style not in SUMMARIZATION_STYLES:
+        raise Http404(f"Unknown style: {style}")
+    entries = _build_previous_bill_entries(style)
+    return render(
+        request,
+        "previous_legislation.dhtml",
+        {"style": style, "bill_entries": entries},
+    )
+
+
+@require_GET
 def index(request):
     """Render the index page, which currently meta-redirects to /calendar/concise/"""
     return render(request, "index.dhtml")
@@ -813,6 +836,12 @@ _RUBRIC_DIMENSIONS = [
     ("accessibility", "Accessibility"),
     ("neutrality", "Neutrality"),
 ]
+
+
+def distill_previous_legislation():
+    """Yield all style parameterizations for the previous-legislation static page."""
+    for style in SUMMARIZATION_STYLES:
+        yield {"style": style}
 
 
 def distill_evaluations():
