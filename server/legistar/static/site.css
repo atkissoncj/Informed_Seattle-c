@@ -861,10 +861,16 @@ h4.action-type {
 
 /* ---- Amendment table ---- */
 
+.amendment-section-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 1.25rem 0 0.5rem;
+}
+
 .amendment-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
   font-size: 0.85rem;
 }
 
@@ -874,28 +880,29 @@ h4.action-type {
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #6b7280;
-  border-bottom: 2px solid #e5e7eb;
-  padding: 0.4rem 0.6rem 0.4rem 0;
+  color: #9ca3af;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0.3rem 0.6rem 0.3rem 0;
 }
 
 .amendment-table td {
   vertical-align: top;
-  padding: 0.5rem 0.6rem 0.5rem 0;
+  padding: 0.45rem 0.6rem 0.45rem 0;
   border-bottom: 1px solid #f3f4f6;
   color: #374151;
 }
 
+.amendment-table tr:last-child td {
+  border-bottom: none;
+}
+
 .amendment-table .amendment-text {
-  background: #fefce8;
-  padding: 0.35rem 0.6rem;
-  border-radius: 3px;
   font-style: italic;
 }
 
 .amendment-table .amendment-date {
   white-space: nowrap;
-  color: #6b7280;
+  color: #9ca3af;
   font-size: 0.8rem;
 }
 
