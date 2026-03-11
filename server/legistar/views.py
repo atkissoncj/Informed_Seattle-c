@@ -501,9 +501,16 @@ def _legislation_context(legislation: Legislation, style: SummarizationStyle) ->
     district_votes, at_large_votes = (
         _extract_district_votes(legislation) if is_council_bill else ([], [])
     )
-    # When no vote data is stored but the bill passed, synthesize all-yes votes so
-    # the district map shows green for every district instead of gray.
-    if is_council_bill and bill_status_label == "Passed" and not district_votes:
+    # When no vote data is stored but the bill passed at full council (unanimous),
+    # synthesize all-yes votes so the district map shows green for every district.
+    # Only trigger for "Passed at Full Council" — other passing statuses may have
+    # had dissenting votes and should show gray until real vote data is available.
+    _raw_status = (legislation.status or "").lower()
+    if (
+        is_council_bill
+        and not district_votes
+        and "passed at full council" in _raw_status
+    ):
         _district_members = {v: k for k, v in _COUNCIL_DISTRICTS.items() if v <= 7}
         district_votes = [
             {
