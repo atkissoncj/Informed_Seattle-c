@@ -909,6 +909,7 @@ h4.action-type {
 
 .amendment-table .amendment-text {
   font-style: italic;
+  font-weight: 300;
 }
 
 .amendment-table .amendment-date {
