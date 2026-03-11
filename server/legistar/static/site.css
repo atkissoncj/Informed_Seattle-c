@@ -874,6 +874,13 @@ h4.action-type {
   border-collapse: collapse;
   font-size: 0.85rem;
   border-top: 1px solid #e5e7eb;
+  background: transparent;
+  border-radius: 0;
+}
+
+.amendment-table thead {
+  background: transparent;
+  font-weight: inherit;
 }
 
 .amendment-table th {
