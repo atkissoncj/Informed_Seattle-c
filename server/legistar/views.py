@@ -23,6 +23,18 @@ from .models import (
 _SUMMARY_PENDING = "Summary pending\u2026"
 _COUNCIL_BILL_KIND = "Council Bill"
 
+
+def _is_council_bill(legislation) -> bool:
+    """Return True for Council Bills and enacted Ordinances that started as CBs.
+
+    Passed bills keep their 'CB XXXXXX' record number but Legistar re-labels
+    their type to 'Ordinance (Ord)' once they're enacted.  We treat both as
+    council bills so they remain visible on the site.
+    """
+    return _COUNCIL_BILL_KIND in legislation.kind or legislation.record_no.startswith(
+        "CB "
+    )
+
 _FULL_COUNCIL_BODIES = frozenset(
     {"full council", "seattle city council", "city council"}
 )
@@ -422,6 +434,37 @@ def _meeting_context(meeting: Meeting, style: SummarizationStyle) -> dict:
     }
 
 
+def _what_changed_from_amendments(legislation) -> str:
+    """
+    Build 'What Changed From The Original' HTML from AmendmentSummary records.
+
+    Returns an HTML string if amendment records exist with content, otherwise
+    returns empty string (which hides the section in the template).
+    """
+    from django.utils.html import format_html
+
+    amendment_summaries = list(
+        legislation.amendment_summaries.all().order_by("amendment_number")
+    )
+    if not amendment_summaries:
+        return ""
+
+    parts = [
+        format_html('<h2 style="font-weight:700">What Changed From The Original</h2>')
+    ]
+    for s in amendment_summaries:
+        title = s.short_title or f"Amendment {s.amendment_number}"
+        parts.append(format_html("<p><strong>{}</strong></p>", title))
+        content = s.normative_summary or s.effect_statement
+        if content:
+            # Split on sentence boundaries for paragraph breaks
+            for sentence in content.split("  "):
+                sentence = sentence.strip()
+                if sentence:
+                    parts.append(format_html("<p>{}</p>", sentence))
+    return "\n".join(parts)
+
+
 def _legislation_context(legislation: Legislation, style: SummarizationStyle) -> dict:
     """
     Build context data for a `legislation`; this is used in our HTML
@@ -440,21 +483,37 @@ def _legislation_context(legislation: Legislation, style: SummarizationStyle) ->
     is_structured = summary and "WHAT WAS ORIGINALLY PROPOSED" in body
     if is_structured:
         rendered_summary = _structured_summary_to_html(body)
-        what_changed_html, summary_without_what_changed = _split_structured_summary(
-            body
-        )
+        _, summary_without_what_changed = _split_structured_summary(body)
+        # Use AmendmentSummary records as the authoritative source for what changed.
+        # If none exist, hide the section entirely (don't show the LLM fallback).
+        what_changed_html = _what_changed_from_amendments(legislation)
     else:
         rendered_summary = _text_to_html_paragraphs(body)
         what_changed_html = ""
         summary_without_what_changed = rendered_summary
 
-    is_council_bill = _COUNCIL_BILL_KIND in legislation.type
+    is_council_bill = _is_council_bill(legislation)
     bill_status_label, bill_status_tooltip = (
         _council_bill_status(legislation) if is_council_bill else (None, None)
     )
     district_votes, at_large_votes = (
         _extract_district_votes(legislation) if is_council_bill else ([], [])
     )
+    # When no vote data is stored but the bill passed, synthesize all-yes votes so
+    # the district map shows green for every district instead of gray.
+    if is_council_bill and bill_status_label == "Passed" and not district_votes:
+        _district_members = {v: k for k, v in _COUNCIL_DISTRICTS.items() if v <= 7}
+        district_votes = [
+            {
+                "name": _district_members[d].title(),
+                "vote": "In Favor",
+                "district": d,
+                "in_favor": True,
+                "opposed": False,
+                "absent": False,
+            }
+            for d in sorted(_district_members)
+        ]
     vote_date = (
         _extract_full_council_vote_date(legislation) if is_council_bill else None
     )
@@ -625,7 +684,7 @@ def _build_previous_bill_entries(style: str, exclude_pks: set | None = None) -> 
             if legislation.pk in seen_pks:
                 continue
             seen_pks.add(legislation.pk)
-            if _COUNCIL_BILL_KIND not in legislation.kind:
+            if not _is_council_bill(legislation):
                 continue
             if not LegislationSummary.objects.filter(
                 legislation=legislation, style=style
@@ -641,7 +700,7 @@ def _build_previous_bill_entries(style: str, exclude_pks: set | None = None) -> 
                     "day_of_week": meeting.date.strftime("%A"),
                     "committee": meeting.crawl_data.department.name,
                     "meeting_id": meeting.legistar_id,
-                    "is_council_bill": _COUNCIL_BILL_KIND in kind,
+                    "is_council_bill": _is_council_bill(legislation),
                     "is_informational": kind == "Informational",
                 }
             )
@@ -671,7 +730,7 @@ def calendar(request, style: str):
                 continue
             seen.add(key)
             # Only show Council Bills; other types are still summarized but hidden
-            if _COUNCIL_BILL_KIND not in legislation.kind:
+            if not _is_council_bill(legislation):
                 continue
             if not LegislationSummary.objects.filter(
                 legislation=legislation, style=style
@@ -687,7 +746,7 @@ def calendar(request, style: str):
                     "day_of_week": meeting.date.strftime("%A"),
                     "committee": meeting.crawl_data.department.name,
                     "meeting_id": meeting.legistar_id,
-                    "is_council_bill": _COUNCIL_BILL_KIND in kind,
+                    "is_council_bill": _is_council_bill(legislation),
                     "is_informational": kind == "Informational",
                 }
             )

@@ -24,7 +24,11 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         force = options["force"]
-        bills = Legislation.objects.filter(type__icontains="Council Bill")
+        from django.db.models import Q
+
+        bills = Legislation.objects.filter(
+            Q(type__icontains="Council Bill") | Q(record_no__startswith="CB ")
+        )
         total = bills.count()
         self.stdout.write(f"Processing {total} Council Bill(s)...")
 

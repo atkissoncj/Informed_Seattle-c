@@ -23,13 +23,19 @@ from django.db.models import Q
 from server.lib.style import SUMMARIZATION_STYLES
 
 _COUNCIL_BILL_KIND = "Council Bill"
-_COUNCIL_BILL_LIMIT = 20
+_COUNCIL_BILL_LIMIT = 25
 
 
 def _recent_council_bill_ids():
-    """Return the PKs of the N most recently crawled Council Bills."""
+    """Return the PKs of the N most recently crawled Council Bills.
+
+    Includes both active Council Bills and enacted Ordinances that originated
+    as Council Bills (identifiable by their 'CB XXXXXX' record number).
+    """
     return list(
-        Legislation.objects.filter(type__icontains=_COUNCIL_BILL_KIND)
+        Legislation.objects.filter(
+            Q(type__icontains=_COUNCIL_BILL_KIND) | Q(record_no__startswith="CB ")
+        )
         .order_by("-id")[:_COUNCIL_BILL_LIMIT]
         .values_list("id", flat=True)
     )
@@ -148,7 +154,9 @@ def clear_council_bill_summaries():
     print("STEP 2.5: Clearing Council Bill summaries for regeneration")
     print("=" * 80)
 
-    council_bills = Legislation.objects.filter(type__icontains=_COUNCIL_BILL_KIND)
+    council_bills = Legislation.objects.filter(
+        Q(type__icontains=_COUNCIL_BILL_KIND) | Q(record_no__startswith="CB ")
+    )
     cb_count = council_bills.count()
 
     if cb_count == 0:
@@ -180,9 +188,9 @@ def summarize_all_legislation():
 
     # For council bills, restrict to the N most recent; always include other types.
     recent_cb_ids = _recent_council_bill_ids()
-    legislations = Legislation.objects.filter(
-        Q(id__in=recent_cb_ids) | ~Q(type__icontains=_COUNCIL_BILL_KIND)
-    )
+    # "is a council bill" = type contains 'Council Bill' OR record_no starts with 'CB '
+    _is_cb = Q(type__icontains=_COUNCIL_BILL_KIND) | Q(record_no__startswith="CB ")
+    legislations = Legislation.objects.filter(Q(id__in=recent_cb_ids) | ~_is_cb)
     total = legislations.count()
 
     if total == 0:
