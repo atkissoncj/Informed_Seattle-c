@@ -671,7 +671,9 @@ def distill_documents():
 # ------------------------------------------------------------------------
 
 
-def _build_previous_bill_entries(style: str, exclude_pks: set | None = None) -> list:
+def _build_previous_bill_entries(
+    style: SummarizationStyle, exclude_pks: set | None = None
+) -> list:
     """Return bill-entry dicts for all council bills older than the crawl window."""
     cutoff_date = datetime.date.today() - datetime.timedelta(
         days=settings.CRAWL_INTERVAL_DAYS
@@ -869,7 +871,7 @@ def document(
     )
 
 
-def _previous_legislation_context(style: str, page: int) -> dict:
+def _previous_legislation_context(style: SummarizationStyle, page: int) -> dict:
     """Build template context for a paginated previous-legislation page."""
     import math
 
