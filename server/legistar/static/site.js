@@ -343,16 +343,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 async function shareBill(btn) {
-  const article = btn.closest("article[data-share-text]");
+  const article = btn.closest("article.bill-entry[id]");
   if (!article) return;
-  const text = article.dataset.shareText;
+  const url = window.location.origin + window.location.pathname + "#" + article.id;
   const confirm = btn.querySelector(".share-btn-confirm");
   const label = btn.querySelector(".share-btn-label");
 
   // Use native Web Share API on supported devices (mobile)
   if (navigator.share) {
     try {
-      await navigator.share({ text });
+      await navigator.share({ url });
       return;
     } catch (e) {
       if (e.name === "AbortError") return; // user cancelled
@@ -361,11 +361,11 @@ async function shareBill(btn) {
 
   // Fallback: copy to clipboard
   try {
-    await navigator.clipboard.writeText(text);
+    await navigator.clipboard.writeText(url);
   } catch (e) {
     // Last resort: execCommand
     const ta = document.createElement("textarea");
-    ta.value = text;
+    ta.value = url;
     ta.style.position = "fixed";
     ta.style.opacity = "0";
     document.body.appendChild(ta);

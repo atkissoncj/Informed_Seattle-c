@@ -21,7 +21,7 @@
 {% block content %}
 
   {% for entry in bill_entries %}
-    <article class="bill-entry" data-share-text="{{ entry.legislation.share_text }}">
+    <article class="bill-entry" id="{{ entry.legislation.anchor_id }}" data-share-text="{{ entry.legislation.share_text }}">
       <h4 class="action-type">
         {{ entry.legislation.kind }}
         {% if entry.is_council_bill and entry.legislation.bill_status_label %}

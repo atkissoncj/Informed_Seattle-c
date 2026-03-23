@@ -677,6 +677,7 @@ def _legislation_context(legislation: Legislation, style: SummarizationStyle) ->
             if DocumentSummary.objects.filter(document=document, style=style).exists()
         ],
         "share_text": _build_share_text(legislation, body, summary),
+        "anchor_id": legislation.record_no.lower().replace(" ", "-"),
     }
 
 
