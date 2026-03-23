@@ -523,6 +523,12 @@ h4.action-type {
   color: #888;
 }
 
+.bill-next-step {
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 0.15rem;
+}
+
 .share-btn {
   display: inline-flex;
   align-items: center;
@@ -940,6 +946,12 @@ h4.action-type {
 .vote-no   { color: #b91c1c; }
 .vote-absent { color: #9ca3af; }
 .vote-unknown { color: #9ca3af; }
+.vote-non-committee { color: #9ca3af; font-weight: 300; }
+
+.vote-row-non-committee td {
+  color: #9ca3af;
+  font-weight: 300;
+}
 
 .amendment-table {
   width: 100%;

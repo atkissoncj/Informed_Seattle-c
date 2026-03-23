@@ -12,6 +12,11 @@ _FULL_COUNCIL_BODIES = frozenset(
 )
 
 
+def _is_full_council(action_by: str) -> bool:
+    low = (action_by or "").lower()
+    return any(b in low for b in _FULL_COUNCIL_BODIES)
+
+
 class Command(BaseCommand):
     help = "Fetch and store individual council vote data for all Council Bills."
 
@@ -36,57 +41,77 @@ class Command(BaseCommand):
         skipped = 0
 
         for bill in bills:
-            if not force and bill.vote_data.get("action_details"):
+            existing = bill.vote_data or {}
+            already_has_council = bool(existing.get("action_details"))
+            already_has_committee = bool(existing.get("committee_action_details"))
+
+            if not force and already_has_council and already_has_committee:
                 skipped += 1
                 continue
 
-            # Only bother fetching if any row has a Full Council action
-            has_full_council_vote = any(
-                row.action_details is not None
-                and row.result
-                and any(
-                    body in (row.action_by or "").lower()
-                    for body in _FULL_COUNCIL_BODIES
-                )
-                for row in bill.crawl_data.rows
-            )
-            if not has_full_council_vote:
+            # Collect rows with a result and action_details link
+            council_rows = []
+            committee_rows = []
+            for row in bill.crawl_data.rows:
+                if row.action_details is None or not row.result:
+                    continue
+                if _is_full_council(row.action_by):
+                    council_rows.append(row)
+                else:
+                    committee_rows.append(row)
+
+            # Skip entirely if nothing to fetch
+            if not council_rows and not committee_rows:
                 skipped += 1
                 continue
 
             self.stdout.write(f"  Fetching votes for {bill.record_no}...")
             try:
-                # Fetch action details paired with the action_by from each row
                 from server.legistar.lib.crawler import LegistarCalendarCrawler
 
                 crawler = LegistarCalendarCrawler("seattle")
-                paired = []
-                for row in bill.crawl_data.rows:
-                    if row.action_details is None or not row.result:
-                        continue
-                    if not any(
-                        body in (row.action_by or "").lower()
-                        for body in _FULL_COUNCIL_BODIES
-                    ):
-                        continue
-                    action_data = crawler.get_action_for_legislation_row(row)
-                    if action_data is not None:
-                        paired.append(
-                            {
-                                "action_by": row.action_by or "",
-                                "action": json.loads(action_data.json()),
-                            }
-                        )
+                updated = dict(existing)
 
-                if paired:
-                    bill.vote_data = {"action_details": paired}
+                if council_rows and (force or not already_has_council):
+                    paired = []
+                    for row in council_rows:
+                        action_data = crawler.get_action_for_legislation_row(row)
+                        if action_data is not None:
+                            paired.append(
+                                {
+                                    "action_by": row.action_by or "",
+                                    "action": json.loads(action_data.json()),
+                                }
+                            )
+                    if paired:
+                        updated["action_details"] = paired
+
+                if committee_rows and (force or not already_has_committee):
+                    paired = []
+                    for row in committee_rows:
+                        action_data = crawler.get_action_for_legislation_row(row)
+                        if action_data is not None:
+                            paired.append(
+                                {
+                                    "action_by": row.action_by or "",
+                                    "action": json.loads(action_data.json()),
+                                }
+                            )
+                    if paired:
+                        updated["committee_action_details"] = paired
+
+                if updated != existing:
+                    bill.vote_data = updated
                     bill.save(update_fields=["vote_data"])
                     fetched += 1
+                    n_c = len(updated.get("action_details", []))
+                    n_m = len(updated.get("committee_action_details", []))
                     self.stdout.write(
-                        f"    Saved {len(paired)} vote record(s) for {bill.record_no}."
+                        f"    Saved council={n_c} committee={n_m} record(s) for {bill.record_no}."
                     )
                 else:
                     skipped += 1
+
             except Exception as exc:
                 self.stderr.write(
                     f"  Warning: could not fetch votes for {bill.record_no}: {exc}"

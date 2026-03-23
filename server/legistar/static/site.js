@@ -139,6 +139,7 @@ function initBillMap(canvas, baseGeoJSON) {
   try { votes = JSON.parse(canvas.dataset.votes || "[]"); } catch (e) { return; }
 
   var voteStatus = canvas.dataset.voteStatus || "pending";
+  var pendingLabel = canvas.dataset.pendingLabel || "";
   var hasVotes = votes.length > 0;
   var isUnknown = voteStatus === "unknown";
   var byDistrict = {};
@@ -269,7 +270,7 @@ function initBillMap(canvas, baseGeoJSON) {
         var avCls2 = p.amendment_vote_type === "yes" ? "vp-yes" : p.amendment_vote_type === "no" ? "vp-no" : "vp-absent";
         var voteLabel = isUnknown
           ? '<div class="vp-vote vp-vote-unknown">Voting status unknown</div>'
-          : '<div class="vp-vote vp-upcoming">Vote upcoming</div>';
+          : '<div class="vp-vote vp-upcoming">' + (pendingLabel || "Vote upcoming") + '</div>';
         popup.setLngLat(ev.lngLat).setHTML(
           '<div class="vp-district">District ' + p.district + "</div>" +
           (memberName ? '<div class="vp-name">' + memberName + "</div>" : "") +
@@ -295,7 +296,7 @@ function initBillMap(canvas, baseGeoJSON) {
       label.className = "bill-map-pending-text";
       label.textContent = isUnknown
         ? "Vote data unavailable \u2014 individual member votes were not recorded"
-        : "Voting upcoming \u2014 bill is currently in Committee";
+        : (pendingLabel || "Voting upcoming");
       overlay.appendChild(label);
       canvas.appendChild(overlay);
     }

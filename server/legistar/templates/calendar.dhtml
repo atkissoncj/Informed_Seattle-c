@@ -127,6 +127,9 @@
           {% else %}
           <time class="bill-action-date"><span class="bill-action-date-label">Date of This Council Action:</span> {% if entry.legislation.vote_date %}{{ entry.legislation.vote_date|date:"F j, Y" }}{% else %}{{ entry.meeting_date|date:"F j, Y" }}{% endif %}</time>
           {% endif %}
+          {% if entry.legislation.next_step %}
+          <p class="bill-next-step"><span class="bill-action-date-label">Next step:</span> {{ entry.legislation.next_step }}</p>
+          {% endif %}
           <button class="share-btn" onclick="shareBill(this)" aria-label="Share this bill summary">
             <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
             <span class="share-btn-label">Share</span>
@@ -149,7 +152,7 @@
             </thead>
             <tbody>
               {% for row in entry.legislation.vote_table %}
-              <tr>
+              <tr{% if row.non_committee %} class="vote-row-non-committee"{% endif %}>
                 <td>{{ row.name }}</td>
                 <td class="vote-seat">{{ row.district_label }}</td>
                 <td class="vote-amendment">{% if row.sponsored_amendment %}Yes{% else %}—{% endif %}</td>
@@ -165,6 +168,7 @@
                  data-votes="{{ entry.legislation.district_votes_json }}"
                  data-amendments="{{ entry.legislation.amendments_json }}"
                  data-vote-status="{{ entry.legislation.vote_map_status }}"
+                 data-pending-label="{{ entry.legislation.vote_map_pending_label }}"
                  aria-label="Seattle council district vote map"></div>
           </div>
 

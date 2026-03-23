@@ -65,6 +65,11 @@ _AMENDMENT_KEYWORDS = frozenset(
 )
 
 
+_FULL_COUNCIL_BODIES = frozenset(
+    {"full council", "seattle city council", "city council"}
+)
+
+
 _STATUS_TOOLTIPS = {
     "signed": "Signed by Mayor, awaiting or completed codification",
     "vetoed": "Returned by Mayor without signature",
@@ -101,11 +106,99 @@ def _amendment_sponsors(amendments: list) -> set[str]:
     return sponsors
 
 
+def _extract_committee_votes(legislation) -> tuple[list, list, str]:
+    """Return (district_votes, at_large_votes, committee_name) from committee_action_details.
+
+    Returns empty lists and empty string when no committee vote data exists.
+    """
+    committee_details = (legislation.vote_data or {}).get("committee_action_details", [])
+    if not committee_details:
+        return [], [], ""
+
+    # Use the most recent committee action that has per-member rows
+    committee_name = ""
+    district_votes: list[dict] = []
+    at_large_votes: list[dict] = []
+
+    for entry in committee_details:
+        rows = (entry.get("action") or {}).get("rows", [])
+        if not rows:
+            continue
+        committee_name = entry.get("action_by", "")
+        for row in rows:
+            name = (row.get("person") or {}).get("name", "")
+            vote = row.get("vote", "")
+            district = _COUNCIL_DISTRICTS.get(_normalize_member_name(name))
+            # Skip Legistar's "NonMember-NV" entries — these are not committee
+            # members and will be filled in as grey rows by _build_vote_table.
+            if "nonmember" in vote.lower():
+                continue
+            classification = _classify_vote(vote)
+            entry_dict = {
+                "name": name,
+                "vote": vote,
+                "district": district,
+                **classification,
+            }
+            if _is_district_seat(district):
+                district_votes.append(entry_dict)
+            else:
+                at_large_votes.append(entry_dict)
+        if district_votes or at_large_votes:
+            break  # use the first entry with actual rows
+
+    district_votes.sort(key=lambda v: v["district"] if isinstance(v["district"], int) else 99)
+    at_large_votes.sort(key=lambda v: v["district"] if isinstance(v["district"], int) else 99)
+    return district_votes, at_large_votes, committee_name
+
+
+def _next_step_label(legislation) -> str:
+    """Return a plain-English next-step description for a council bill."""
+    raw = (legislation.status or "").lower()
+    try:
+        body = (legislation.crawl_data.controlling_body or "").strip()
+    except Exception:
+        body = ""
+
+    if "sign" in raw:
+        return "Signed into law — codification in progress"
+    if "veto" in raw or "returned" in raw:
+        return "Returned to City Council — Mayor\u2019s Office"
+    if "pass" in raw or "adopt" in raw:
+        return "Awaiting Mayor signature — Mayor\u2019s Office"
+    if "fail" in raw or "defeat" in raw:
+        return "Did not pass Full Council"
+    if "full council agenda" in raw:
+        return "Next: Full Council vote"
+    if "committee agenda" in raw:
+        if body:
+            return f"Next: {body} vote"
+        return "Next: Committee vote"
+    if "in committee" in raw or "hear" in raw:
+        if body:
+            return f"Under review — {body}"
+        return "Under committee review"
+    if body:
+        return f"Referred to {body}"
+    return "Referred to committee"
+
+
 def _build_vote_table(
-    district_votes: list, at_large_votes: list, amendments: list
+    district_votes: list,
+    at_large_votes: list,
+    amendments: list,
+    committee_name: str = "",
 ) -> list[dict]:
-    """Build a per-member vote table for display."""
+    """Build a per-member vote table for display.
+
+    If committee_name is provided, members not in district_votes/at_large_votes
+    are added as non-committee rows (grey, with a 'not on committee' note).
+    """
     sponsors = _amendment_sponsors(amendments)
+    voted_names = {
+        _normalize_member_name(v["name"])
+        for v in district_votes + at_large_votes
+    }
     rows = []
     for v in district_votes + at_large_votes:
         dist = v["district"]
@@ -129,7 +222,37 @@ def _build_vote_table(
             "sponsored_amendment": sponsored,
             "vote": vote_label,
             "vote_class": vote_class,
+            "non_committee": False,
+            "committee_name": "",
         })
+
+    # When rendering a committee vote, append all council members who weren't
+    # on the committee so the full table is always 9 rows.
+    if committee_name:
+        # Build a title-cased lookup for display names
+        _all_members = {
+            norm: title
+            for norm, title in [
+                (k, " ".join(w.capitalize() for w in k.split()))
+                for k in _COUNCIL_DISTRICTS
+            ]
+        }
+        for norm_name, display_name in sorted(
+            _all_members.items(), key=lambda x: _COUNCIL_DISTRICTS[x[0]]
+        ):
+            if norm_name in voted_names:
+                continue
+            dist = _COUNCIL_DISTRICTS[norm_name]
+            label = f"District {dist}" if dist <= 7 else "At Large"
+            rows.append({
+                "name": display_name.title(),
+                "district_label": label,
+                "sponsored_amendment": False,
+                "vote": f"Not on {committee_name}",
+                "vote_class": "vote-non-committee",
+                "non_committee": True,
+                "committee_name": committee_name,
+            })
     return rows
 
 
@@ -649,6 +772,33 @@ def _legislation_context(legislation: Legislation, style: SummarizationStyle) ->
         ]
     )
 
+    # If no full-council vote yet, fall back to committee vote data for the map/table.
+    committee_district_votes, committee_at_large_votes, committee_name = (
+        _extract_committee_votes(legislation) if is_council_bill else ([], [], "")
+    )
+    using_committee_votes = (
+        not district_votes and not at_large_votes
+        and (committee_district_votes or committee_at_large_votes)
+    )
+    display_district_votes = committee_district_votes if using_committee_votes else district_votes
+    display_at_large_votes = committee_at_large_votes if using_committee_votes else at_large_votes
+    display_committee_name = committee_name if using_committee_votes else ""
+
+    # vote_map_pending_label: text shown below the map when no full-council vote yet
+    if vote_map_status == "pending":
+        if "full council agenda" in _raw_status:
+            vote_map_pending_label = "Full Council vote upcoming"
+        elif using_committee_votes:
+            vote_map_pending_label = f"Committee vote — {committee_name}" if committee_name else "Committee vote"
+        elif "in committee" in _raw_status or "committee agenda" in _raw_status:
+            vote_map_pending_label = "Bill is currently in committee"
+        else:
+            vote_map_pending_label = ""
+    else:
+        vote_map_pending_label = ""
+
+    next_step = _next_step_label(legislation) if is_council_bill else ""
+
     return {
         "legistar_id": legislation.legistar_id,
         "url": legislation.url,
@@ -663,14 +813,18 @@ def _legislation_context(legislation: Legislation, style: SummarizationStyle) ->
         "summary_without_what_changed": summary_without_what_changed,
         "bill_status_label": bill_status_label,
         "bill_status_tooltip": bill_status_tooltip,
-        "district_votes": district_votes,
-        "district_votes_json": json.dumps(district_votes),
-        "vote_map_status": vote_map_status,
-        "at_large_votes": at_large_votes,
+        "district_votes": display_district_votes,
+        "district_votes_json": json.dumps(display_district_votes),
+        "vote_map_status": vote_map_status if not using_committee_votes else "voted",
+        "vote_map_pending_label": vote_map_pending_label,
+        "at_large_votes": display_at_large_votes,
         "vote_date": vote_date,
         "amendments": amendments,
         "amendments_json": amendments_json,
-        "vote_table": _build_vote_table(district_votes, at_large_votes, amendments),
+        "vote_table": _build_vote_table(
+            display_district_votes, display_at_large_votes, amendments, display_committee_name
+        ),
+        "next_step": next_step,
         "document_table_contexts": [
             _document_table_context(document, style)
             for document in legislation.documents.all()
