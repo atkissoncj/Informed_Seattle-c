@@ -797,6 +797,19 @@ def distill_documents():
 # ------------------------------------------------------------------------
 
 
+def _key_date_type(legislation) -> str:
+    """Return the type of key date to display for a council bill.
+
+    Returns one of: "council_action", "on_agenda", "in_committee".
+    """
+    raw = (legislation.status or "").lower()
+    if "full council agenda" in raw:
+        return "on_agenda"
+    if "in committee" in raw or "committee agenda" in raw or "hear" in raw:
+        return "in_committee"
+    return "council_action"
+
+
 def _build_previous_bill_entries(
     style: SummarizationStyle, exclude_pks: set | None = None
 ) -> list:
@@ -830,6 +843,8 @@ def _build_previous_bill_entries(
                     "day_of_week": meeting.date.strftime("%A"),
                     "committee": meeting.crawl_data.department.name,
                     "meeting_id": meeting.legistar_id,
+                    "meeting_url": meeting.url,
+                    "key_date_type": _key_date_type(legislation),
                     "is_council_bill": _is_council_bill(legislation),
                     "is_informational": kind == "Informational",
                 }
@@ -876,6 +891,8 @@ def calendar(request, style: str):
                     "day_of_week": meeting.date.strftime("%A"),
                     "committee": meeting.crawl_data.department.name,
                     "meeting_id": meeting.legistar_id,
+                    "meeting_url": meeting.url,
+                    "key_date_type": _key_date_type(legislation),
                     "is_council_bill": _is_council_bill(legislation),
                     "is_informational": kind == "Informational",
                 }
