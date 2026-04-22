@@ -11,6 +11,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # The root of all baked data
 DATA_DIR = BASE_DIR / "data"
 
+SUMMARIZATION_BACKEND = os.environ.get("SUMMARIZATION_BACKEND", "auto").lower()
+
 # --------------------------------------------------------------------
 # Security settings
 # --------------------------------------------------------------------
