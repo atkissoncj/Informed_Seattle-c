@@ -118,7 +118,19 @@ OPENAI_ORGANIZATION = os.environ.get("OPENAI_ORGANIZATION")
 
 
 # --------------------------------------------------------------------
-# Together AI config (used for OLMo-13B summarization via API)
+# Gemma config
+# --------------------------------------------------------------------
+
+GEMMA_API_KEY = os.environ.get("GEMMA_API_KEY")
+GEMMA_API_URL = os.environ.get(
+    "GEMMA_API_URL",
+    "https://llmaven-prod-litellm-prod.lemonmoss-19296c81.westus2.azurecontainerapps.io/v1",
+)
+GEMMA_MODEL_NAME = os.environ.get("GEMMA_MODEL_NAME", "gemma-4-31b")
+
+
+# --------------------------------------------------------------------
+# Together AI config (used for hosted summarization)
 # --------------------------------------------------------------------
 
 TOGETHER_API_KEY = os.environ.get("TOGETHER_API_KEY")
