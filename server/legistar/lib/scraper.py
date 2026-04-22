@@ -36,8 +36,10 @@ CALENDAR_ROW_HEADERS = [
     "meeting location",
     "meeting details",
     "agenda",
+    "accessible agenda",
     "agenda packet",
     "minutes",
+    "accessible minutes",
     "seattle channel",
 ]
 
