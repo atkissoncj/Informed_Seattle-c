@@ -80,7 +80,7 @@ class GemmaClient:
         self,
         text: str,
         style: str = "what_changed",
-        max_tokens: int = 256,
+        max_tokens: int = 100000,
     ) -> dict:
         """Summarize legislative text via the configured Gemma endpoint."""
         if style == "what_changed":
@@ -88,7 +88,7 @@ class GemmaClient:
                 "Please provide a concise summary of the following legislative text.\n"
                 "First, create a brief headline (under 10 words), then provide a "
                 "2-3 sentence summary.\n\n"
-                f"Text to summarize:\n{text[:4000]}\n\n"
+                f"Text to summarize:\n{text}\n\n"
                 "Format your response as:\n"
                 "HEADLINE: [your headline here]\n"
                 "SUMMARY: [your 2-3 sentence summary here]"
@@ -97,7 +97,7 @@ class GemmaClient:
             prompt = (
                 "Please summarize the following legislative text.\n"
                 "First, create a headline, then provide a detailed summary.\n\n"
-                f"Text to summarize:\n{text[:4000]}\n\n"
+                f"Text to summarize:\n{text}\n\n"
                 "Format your response as:\n"
                 "HEADLINE: [your headline here]\n"
                 "SUMMARY: [your detailed summary here]"

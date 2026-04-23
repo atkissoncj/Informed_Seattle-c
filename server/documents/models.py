@@ -4,6 +4,8 @@ import io
 import mimetypes
 import sys
 import typing as t
+import hashlib
+from server.lib.olmo_client import get_olmo_client
 
 import requests
 from django.conf import settings
@@ -220,6 +222,8 @@ class DocumentSummaryManager(models.Manager):
             summarizer = SUMMARIZERS_BY_STYLE[style]
             result = summarizer(text=document.extracted_text)
             if isinstance(result, SummarizationSuccess):
+                client = get_olmo_client()
+
                 document_summary = self.create(
                     document=document,
                     style=style,
@@ -228,8 +232,14 @@ class DocumentSummaryManager(models.Manager):
                     original_text=result.original_text,
                     chunks=result.chunks,
                     chunk_summaries=result.chunk_summaries,
+                    model=client.model_name,
+                    content_hash=hashlib.sha256(
+                        document.extracted_text.encode("utf-8")
+                    ).hexdigest(),
                 )
             else:
+                client = get_olmo_client()
+
                 document_summary = self.create(
                     document=document,
                     style=style,
@@ -238,6 +248,10 @@ class DocumentSummaryManager(models.Manager):
                     original_text=document.extracted_text,
                     chunks=[],
                     chunk_summaries=[],
+                    model=client.model_name,
+                    content_hash=hashlib.sha256(
+                        document.extracted_text.encode("utf-8")
+                    ).hexdigest(),
                 )
             return document_summary, True
 

@@ -303,7 +303,7 @@ def summarize_bill(bill, style="what_changed", force=False):
 
     # Define generator function
     def generate_summary(text, style):
-        return olmo.summarize(text, style=style, max_tokens=512)
+        return olmo.summarize(text, style=style, max_tokens=100000)
 
     # Get or generate with caching
     summary = cache.get_or_generate(
@@ -373,7 +373,7 @@ def olmo_document_summarization(
 
     try:
         olmo = get_olmo_client()
-        result = olmo.summarize(text, style="concise", max_tokens=512)
+        result = olmo.summarize(text, style="concise", max_tokens=100000)
 
         return SummarizationSuccess(
             original_text=text,
@@ -422,4 +422,5 @@ SUMMARIZERS: list[SummarizerCallable] = [
 
 SUMMARIZERS_BY_STYLE: dict[str, SummarizerCallable] = {
     "what_changed": olmo_document_summarization,
+    "what_changed_gemma4": olmo_document_summarization,
 }
