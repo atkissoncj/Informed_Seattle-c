@@ -50,7 +50,6 @@ class GemmaClient:
     def generate(
         self,
         prompt: str,
-        max_new_tokens: int = 512,
         temperature: float = 0.7,
         top_p: float = 0.9,
     ) -> str:
@@ -58,7 +57,6 @@ class GemmaClient:
         payload = {
             "model": self.model_name,
             "messages": [{"role": "user", "content": prompt}],
-            "max_tokens": max_new_tokens,
             "temperature": temperature,
             "top_p": top_p,
         }
